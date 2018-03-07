@@ -1,0 +1,9 @@
+{
+  "name": "beechit/bynder-libs",
+  "config": {
+    "vendor-dir": "PHP"
+  },
+  "require": {
+    "Bynder/bynder-php-sdk": "^1.0.5"
+  }
+}

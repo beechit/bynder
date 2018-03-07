@@ -1,0 +1,68 @@
+{
+	"name": "beechit/bynder",
+	"type": "typo3-cms-extension",
+	"description": "Bynder integration for TYPO3",
+	"keywords": [
+		"TYPO3",
+		"extension",
+		"Bynder",
+		"DAM"
+	],
+	"homepage": "https://github.com/beechit/bynder",
+	"support": {
+		"issues": "https://github.com/beechit/bynder/issues"
+	},
+	"authors": [
+		{
+			"name": "Frans Saris",
+			"email": "t3ext@beech.it",
+			"role": "Developer",
+			"homepage": "https://www.beech.it"
+		}
+	],
+	"license": ["GPL-2.0+"],
+	"require": {
+		"typo3/cms-core": "^8.7.0 || ^9.0",
+		"Bynder/bynder-php-sdk": "^1.0.5"
+	},
+	"require-dev": {
+		"friendsofphp/php-cs-fixer": "^2.0",
+		"nimut/testing-framework": "^2.0"
+	},
+	"replace": {
+		"bynder": "self.version",
+		"typo3-ter/bynder": "self.version"
+	},
+	"autoload": {
+		"psr-4": {
+			"BeechIt\\Bynder\\": "Classes/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"BeechIt\\Bynder\\Tests\\": "Tests/"
+		}
+	},
+	"config": {
+		"vendor-dir": ".Build/vendor"
+	},
+	"scripts": {
+		"link-extension": [
+			"@php -r 'is_dir($extFolder=__DIR__.\"/.Build/public/typo3conf/ext/\") || mkdir($extFolder, 0777, true);'",
+			"@php -r 'file_exists($extFolder=__DIR__.\"/.Build/public/typo3conf/ext/bynder\") || symlink(__DIR__,$extFolder);'"
+		],
+		"post-autoload-dump": [
+			"@link-extension"
+		],
+        "package": "cd Resources/Private/ && composer install && cd ../../ && TAG=$(git describe --tags); zip -9 -r --exclude=*.git* --exclude=.* --exclude=Resources/Private/composer.* bynder_$TAG.zip ."
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "1.x-dev"
+		},
+		"typo3/cms": {
+			"cms-package-dir": "{$vendor-dir}/typo3/cms",
+			"web-dir": ".Build/Web"
+		}
+	}
+}

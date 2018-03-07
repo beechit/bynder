@@ -1,0 +1,18 @@
+variables:
+  COMPOSER_CACHE_DIR: "${CI_PROJECT_DIR}/.composer/cache"
+  COMPOSER_PROCESS_TIMEOUT: "1800"
+  COMPOSER_ALLOW_SUPERUSER: "1"
+
+cache:
+  key: "$CI_BUILD_REF_NAME"
+  paths:
+    - .composer/
+    - .php_cs.cache
+
+cgl:
+  image: fransbeechit/typo3
+  stage: test
+  before_script:
+    - composer install
+  script:
+    - .Build/vendor/bin/php-cs-fixer fix --dry-run --diff --diff-format udiff

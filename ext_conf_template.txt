@@ -1,0 +1,18 @@
+# cat=basic/API; type=string; label=Bynder Url (domain.bynder.com)
+url =
+
+# cat=basic/API; type=string; label=OnTheFly derivative's Url (optional);(https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq)
+otfBaseUrl =
+
+# cat=basic/API; type=string; label=Bynder OAuth consumer (key)
+consumer_key =
+
+# cat=basic/API; type=string; label=Bynder OAuth consumer secret
+consumer_secret =
+
+# cat=basic/API; type=string; label=Bynder OAuth token (key)
+token_key =
+
+# cat=basic/API; type=string; label=Bynder OAuth token secret
+token_secret =
+

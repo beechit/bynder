@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="messages" date="2018-02-20T11:13:11Z" product-name="bynder">
+        <header/>
+        <body>
+            <trans-unit id="compact_view.button">
+                <source>Pick a file from Bynder</source>
+                <target>Selecteer een bestand uit Bynder</target>
+            </trans-unit>
+            <trans-unit id="compact_view.header">
+                <source>Pick a file from Bynder</source>
+                <target>Selecteer een bestand uit Bynder</target>
+            </trans-unit>
+            <trans-unit id="compact_view.error-no-storage-access">
+                <source>Please make sure you have access to the Bynder file mount. This is needed to use the Bynder file picker</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
