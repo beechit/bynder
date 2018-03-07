@@ -9,13 +9,13 @@ The extension will allow the authorised users to:
 - Display images (scaled/cropped) from Bynder
 
 
-### Requirements:
+### Requirements
 
 1) You are a customer of Bynder https://www.bynder.com/trial/
 2) You have API access (tokens) https://domain.getbynder.com/pysettings#api
 
 
-### Installation:
+### Installation
 
 Download and install `bynder` through extension manager in the back-end of you TYPO3 installation.
 
@@ -23,16 +23,6 @@ Or add `byder` via composer `composer require beechit/bynder` to your existing
 project and go the the extension manager in the back-end to install it.
 
 Next got the the extension configuration of EXT:bynder and fill in the needed url's and credentials.
-
-
-### TODO:
-
-- Raise dependencies and remove work around's after https://forge.typo3.org/issues/84069 and https://forge.typo3.org/issues/84068 are released 
-- Storage `is_browsable` is now checked on permission check in the core but should only be handled as GUI check 
-- Load/cache derivative from API and use these in `AssetProcessing::getThumbnailInfo()`
-- Add warning if selected file isn't allowed
-- Add warning when more then allowed number of files are added
- 
 
 ### How to contribute
 
