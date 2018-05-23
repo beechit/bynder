@@ -64,8 +64,7 @@ class AssetProcessing implements SingletonInterface
         if ($file->getStorage()->getDriverType() !== BynderDriver::KEY) {
             return;
         }
-        // @todo: remove when https://forge.typo3.org/issues/84069 is merged/released
-        $processedFile->setStorage($file->getStorage());
+
         if (!$this->needsReprocessing($processedFile)) {
             return;
         }
