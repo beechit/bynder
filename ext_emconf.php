@@ -15,7 +15,7 @@ $EM_CONF[$_EXTKEY] = [
     'author_email' => 't3ext@beech.it',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.0.0-9.2.99'
+            'typo3' => '8.7.13-9.3.99'
         ],
         'conflicts' => [],
         'suggests' => [],

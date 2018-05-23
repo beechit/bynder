@@ -72,8 +72,3 @@ if (!\TYPO3\CMS\Core\Core\Bootstrap::usesComposerClassLoading()) {
     require_once(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('bynder')
         . 'Resources/Private/PHP/autoload.php');
 }
-
-// XClass to fix core issue https://forge.typo3.org/issues/83976
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][TYPO3\CMS\Core\Resource\Index\Indexer::class] = [
-    'className' => \BeechIt\Bynder\XClass\Indexer::class,
-];
