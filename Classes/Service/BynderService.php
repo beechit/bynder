@@ -14,8 +14,6 @@ use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility;
 
 /**
  * Class BynderService
@@ -69,19 +67,10 @@ class BynderService implements SingletonInterface
 
     public function __construct()
     {
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-        if (class_exists(ConfigurationUtility::class)) {
-            $configuration = $objectManager->get(ConfigurationUtility::class)->getCurrentConfiguration('bynder');
-            $extensionConfiguration = [];
-            foreach ($configuration as $key => $value) {
-                $extensionConfiguration[$key] = $value['value'];
-            }
-        } else {
-            $extensionConfiguration = $objectManager->get(ExtensionConfiguration::class)->get('bynder');
-        }
+        $extensionConfiguration = \BeechIt\Bynder\Utility\ConfigurationUtility::getExtensionConfiguration();
 
-        $this->apiBaseUrl = $this->cleanUrl($extensionConfiguration['url'] ?? '');
-        $this->otfBaseUrl = $this->cleanUrl($extensionConfiguration['otfBaseUrl'] ?? '');
+        $this->apiBaseUrl = $extensionConfiguration['url'] ?? '';
+        $this->otfBaseUrl = $extensionConfiguration['otf_base_url'] ?? '';
         $this->oAuthConsumerKey = $extensionConfiguration['consumer_key'] ?? null;
         $this->oAuthConsumerSecret = $extensionConfiguration['consumer_secret'] ?? null;
         $this->oAuthTokenKey = $extensionConfiguration['token_key'] ?? null;
@@ -217,34 +206,6 @@ class BynderService implements SingletonInterface
         return $response !== null && $response->getStatusCode() === 204;
     }
 
-    /**
-     * Clean url
-     *
-     * When url given, make sure url is a valid url
-     *
-     * @param string $url
-     * @return string
-     */
-    public function cleanUrl(string $url): string
-    {
-        if ($url === '') {
-            return $url;
-        }
-
-        // Make sure scheme is given
-        $urlParts = parse_url($url);
-        if (empty($urlParts['scheme'])) {
-            $url = 'https://' . $url;
-            $urlParts = parse_url($url);
-        }
-
-        // When there is a path make sure there is a leading slash
-        if (!empty($urlParts['path'])) {
-            $url = rtrim($url, '/') . '/';
-        }
-
-        return $url;
-    }
 
     /**
      * @return FrontendInterface
