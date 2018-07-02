@@ -69,10 +69,20 @@ class AssetProcessing implements SingletonInterface
             return;
         }
 
-        $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+        try {
+            $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+        } catch (\Exception $e) {
+            $mediaInfo = [
+                'isPublic' => false,
+                'thumbnails' => [
+                    'thul' => '',
+                    'webimage' => '',
+                    'mini' => '',
+                ]
+            ];
+        }
 
         $processingConfiguration = $processedFile->getProcessingConfiguration();
-
         // The CONTEXT_IMAGEPREVIEW task only gives max dimensions
         if ($taskType === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
             if (!empty($processingConfiguration['width'])) {
@@ -104,6 +114,7 @@ class AssetProcessing implements SingletonInterface
         // Update existing processed file
         $processedFile->updateProperties(
             [
+                BynderDriver::KEY => true,
                 'width' => $fileInfo['width'],
                 'height' => $fileInfo['height'],
                 'checksum' => $checksum,

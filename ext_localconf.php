@@ -61,6 +61,11 @@ $iconRegistry->registerIcon(
     \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
     ['source' => 'EXT:bynder/Resources/Public/Icons/Extension.svg']
 );
+$iconRegistry->registerIcon(
+    'bynder-image-unavailable',
+    \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+    ['source' => 'EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg']
+);
 unset($iconRegistry);
 
 // Register the extractor to fetch metadata from Bynder
