@@ -12,6 +12,12 @@
             <trans-unit id="compact_view.error-no-storage-access">
                 <source>Please make sure you have access to the Bynder file mount. This is needed to use the Bynder file picker</source>
             </trans-unit>
+            <trans-unit id="be_groups.file_permissions.folder_add_via_bynder">
+                <source>Files: Add via Bynder</source>
+            </trans-unit>
+            <trans-unit id="be_users.file_permissions.folder_add_via_bynder">
+                <source>Files: Add via Bynder</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

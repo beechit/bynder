@@ -59,7 +59,12 @@ $iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\
 $iconRegistry->registerIcon(
     'actions-bynder-compact-view',
     \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
-    ['source' => 'EXT:bynder/Resources/Public/Icons/Extension.svg']
+    ['source' => 'EXT:bynder/Resources/Public/Icons/actions-bynder-compact-view.svg']
+);
+$iconRegistry->registerIcon(
+    'permissions-bynder-compact-view',
+    \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+    ['source' => 'EXT:bynder/Resources/Public/Icons/permissions-bynder-compact-view.svg']
 );
 unset($iconRegistry);
 
