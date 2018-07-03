@@ -8,13 +8,13 @@ namespace BeechIt\Bynder\Resource;
  * Date: 19-2-18
  * All code (c) Beech.it all rights reserved
  */
+use BeechIt\Bynder\Exception\NotImplementedException;
 use BeechIt\Bynder\Service\BynderService;
 use Bynder\Api\Impl\AssetBankManager;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
 use TYPO3\CMS\Core\Resource\Exception;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use BeechIt\Bynder\Exception\NotImplementedException;
 
 /**
  * Class BynderDriver
@@ -22,6 +22,9 @@ use BeechIt\Bynder\Exception\NotImplementedException;
 class BynderDriver implements DriverInterface
 {
     const KEY = 'bynder';
+
+    const ASSET_TYPE_VIDEO = 'video';
+    const ASSET_TYPE_IMAGE = 'image';
 
     /**
      * @var array
@@ -213,16 +216,29 @@ class BynderDriver implements DriverInterface
             $format = $matches[2];
         }
 
-        if (!in_array($format, ['mini', 'thul', 'webimage'])) {
-            $format = 'webimage';
-        }
-
         try {
             $fileInfo = $this->getBynderService()->getMediaInfo($identifier);
-            return $fileInfo['thumbnails'][$format];
+            switch ($fileInfo['type']) {
+                case BynderDriver::ASSET_TYPE_IMAGE:
+                    if (!in_array($format, ['mini', 'thul', 'webimage'])) {
+                        $format = 'webimage';
+                    }
+                    return $fileInfo['thumbnails'][$format];
+                case BynderDriver::ASSET_TYPE_VIDEO:
+                    $urls = array_filter($fileInfo['videoPreviewURLs'], function ($url) {
+                        return preg_match('/mp4$/i', $url);
+                    });
+                    if (empty($urls)) {
+                        throw new Exception\FileDoesNotExistException(
+                            'mp4 not found in video URL\'s',
+                            1530626116454
+                        );
+                    }
+                    return reset($urls);
+            }
         } catch (\Exception $exception) {
             throw new Exception\FileDoesNotExistException(
-                sprintf('Requested file "%s" coudn\'t be found', $identifier),
+                sprintf('Requested file "%s" couldn\'t be found', $identifier),
                 1519115242,
                 $exception
             );
@@ -689,8 +705,17 @@ class BynderDriver implements DriverInterface
     {
         if (empty($propertiesToExtract)) {
             $propertiesToExtract = [
-                'size', 'atime', 'mtime', 'ctime', 'mimetype', 'name', 'extension',
-                'identifier', 'identifier_hash', 'storage', 'folder_hash'
+                'size',
+                'atime',
+                'mtime',
+                'ctime',
+                'mimetype',
+                'name',
+                'extension',
+                'identifier',
+                'identifier_hash',
+                'storage',
+                'folder_hash'
             ];
         }
         $fileInformation = [];
@@ -736,7 +761,7 @@ class BynderDriver implements DriverInterface
             case 'folder_hash':
                 return $this->hashIdentifier('');
 
-                // Metadata
+            // Metadata
             case 'title':
                 return $mediaInfo['name'];
             case 'description':

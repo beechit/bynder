@@ -8,9 +8,9 @@ namespace BeechIt\Bynder\Controller;
  * All code (c) Beech.it all rights reserved
  */
 
+use BeechIt\Bynder\Service\BynderService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use BeechIt\Bynder\Service\BynderService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Resource\Index\Indexer;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
@@ -55,6 +55,9 @@ class CompactViewController
      */
     protected $bynderService;
 
+    /**
+     * CompactViewController constructor.
+     */
     public function __construct()
     {
         $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
@@ -66,6 +69,8 @@ class CompactViewController
     }
 
     /**
+     * Action: Display compact view
+     *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
@@ -78,6 +83,7 @@ class CompactViewController
             'language' => $this->getBackendUserAuthentication()->uc['lang'] ?: ($this->getBackendUserAuthentication()->user['lang'] ?: 'en_EN'),
             'apiBaseUrl' => $this->bynderService->getApiBaseUrl(),
             'element' => $request->getQueryParams()['element'],
+            'assetTypes' => $request->getQueryParams()['assetTypes']
         ]);
 
         $response->getBody()->write($this->view->render());
@@ -85,6 +91,13 @@ class CompactViewController
         return $response;
     }
 
+    /**
+     * Action: Retrieve file from storage
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
     public function getFilesAction(ServerRequestInterface $request, ResponseInterface $response)
     {
         $files = [];
@@ -107,6 +120,9 @@ class CompactViewController
         return $response;
     }
 
+    /**
+     * @return ResourceStorage
+     */
     protected function getBynderStorage(): ResourceStorage
     {
         /** @var ResourceStorage $fileStorage */
