@@ -111,7 +111,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
     }
 
     /**
-     * @param array $allowedElements
+     * @param string $allowedElements
      * @return string
      */
     protected function getAssetTypesByAllowedElements($allowedElements): string
@@ -120,9 +120,12 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
         if (empty($allowedElements)) {
             $assetTypes = [BynderDriver::ASSET_TYPE_IMAGE, BynderDriver::ASSET_TYPE_VIDEO];
         } else {
-            $allowedElements = GeneralUtility::trimExplode(',', $allowedElements);
-            if (in_array('png', $allowedElements)) {
-                $assetTypes[] = BynderDriver::ASSET_TYPE_IMAGE;
+            $allowedElements = GeneralUtility::trimExplode(',', strtolower($allowedElements), true);
+            foreach (['jpg', 'png', 'gif'] as $element) {
+                if (in_array($element, $allowedElements)) {
+                    $assetTypes[] = BynderDriver::ASSET_TYPE_VIDEO;
+                    break;
+                }
             }
 
             if (in_array('mp4', $allowedElements)) {
