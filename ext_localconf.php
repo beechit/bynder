@@ -24,24 +24,18 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['registeredDrivers']['bynder'] = [
 // Register slot to use Bynder API for processed file
 $signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
 $signalSlotDispatcher->connect(
-    TYPO3\CMS\Core\Resource\ResourceStorage::class,
-    \TYPO3\CMS\Core\Resource\Service\FileProcessingService::SIGNAL_PreFileProcess,
-    \BeechIt\Bynder\Resource\AssetProcessing::class,
-    'processFile'
-);
-$signalSlotDispatcher->connect(
-    \TYPO3\CMS\Core\Resource\ResourceStorage::class,
-    \TYPO3\CMS\Core\Resource\ResourceStorage::SIGNAL_PreGeneratePublicUrl,
-    \BeechIt\Bynder\Slot\PublicUrlSlot::class,
-    'getPublicUrl'
-);
-$signalSlotDispatcher->connect(
     \TYPO3\CMS\Extensionmanager\Utility\InstallUtility::class,
     'afterExtensionInstall',
     \BeechIt\Bynder\Slot\InstallSlot::class,
     'createBynderFileStorage'
 );
 unset($signalSlotDispatcher);
+
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['onlineMediaHelpers']['bynder'] = \BeechIt\Bynder\Resource\Helper\BynderHelper::class;
+
+$rendererRegistry = \TYPO3\CMS\Core\Resource\Rendering\RendererRegistry::getInstance();
+$rendererRegistry->registerRendererClass(\BeechIt\Bynder\Resource\Rendering\BynderRenderer::class);
+unset($rendererRegistry);
 
 // Register hooks to post/delete usage registration
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] =
@@ -65,7 +59,7 @@ unset($iconRegistry);
 
 // Register the extractor to fetch metadata from Bynder
 $extractorRegistry = \TYPO3\CMS\Core\Resource\Index\ExtractorRegistry::getInstance();
-$extractorRegistry->registerExtractionService(\BeechIt\Bynder\Metadata\Extractor::class);
+$extractorRegistry->registerExtractionService(\BeechIt\Bynder\Resource\Index\Extractor::class);
 unset($extractorRegistry);
 
 if (!\TYPO3\CMS\Core\Core\Bootstrap::usesComposerClassLoading()) {

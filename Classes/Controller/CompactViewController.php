@@ -12,6 +12,7 @@ use BeechIt\Bynder\Service\BynderService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Index\Indexer;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -105,9 +106,9 @@ class CompactViewController
         $fileStorage = $this->getBynderStorage();
         foreach ($request->getParsedBody()['files'] ?? [] as $fileIdentifier) {
             $file = $fileStorage->getFile($fileIdentifier);
-            if ($file) {
+            if ($file instanceof File) {
                 // (Re)Fetch metadata
-                $this->getIndexer($file->getStorage())->extractMetaData($file);
+                $this->getIndexer($fileStorage)->extractMetaData($file);
                 $files[] = $file->getUid();
             }
         }

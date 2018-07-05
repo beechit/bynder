@@ -1,6 +1,6 @@
 <?php
 
-namespace BeechIt\Bynder\Metadata;
+namespace BeechIt\Bynder\Resource\Index;
 
 /*
  * This source file is proprietary property of Beech.it
@@ -9,6 +9,8 @@ namespace BeechIt\Bynder\Metadata;
  */
 use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Core\Resource;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Class Extractor
@@ -53,7 +55,7 @@ class Extractor implements Resource\Index\ExtractorInterface
      */
     public function canProcess(Resource\File $file)
     {
-        return true;
+        return Resource\OnlineMedia\Helpers\OnlineMediaHelperRegistry::getInstance()->getOnlineMediaHelper($file) !== false;
     }
 
     /**
@@ -65,17 +67,10 @@ class Extractor implements Resource\Index\ExtractorInterface
      */
     public function extractMetaData(Resource\File $file, array $previousExtractedData = [])
     {
-        $fileInfo = $file->getStorage()->getFileInfoByIdentifier(
-            $file->getIdentifier(),
-            [
-                'title',
-                'description',
-                'width',
-                'height',
-                'copyright',
-                'keywords',
-            ]
-        );
-        return array_merge($previousExtractedData, $fileInfo);
+        /** @var Resource\OnlineMedia\Helpers\OnlineMediaHelperInterface $helper */
+        $helper = Resource\OnlineMedia\Helpers\OnlineMediaHelperRegistry::getInstance()->getOnlineMediaHelper($file);
+        $output = $previousExtractedData;
+        ArrayUtility::mergeRecursiveWithOverrule($output, ($helper !== false ? $helper->getMetaData($file) : []));
+        return $output;
     }
 }

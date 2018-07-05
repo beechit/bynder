@@ -61,6 +61,7 @@ class AssetProcessing implements SingletonInterface
      */
     public function processFile(FileProcessingService $fileProcessingService, DriverInterface $driver, ProcessedFile $processedFile, File $file, $taskType, array $configuration)
     {
+        return;
         if ($file->getStorage()->getDriverType() !== BynderDriver::KEY) {
             return;
         }
@@ -68,6 +69,7 @@ class AssetProcessing implements SingletonInterface
         if (!$this->needsReprocessing($processedFile)) {
             return;
         }
+
 
         $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
 

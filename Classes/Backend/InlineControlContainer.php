@@ -123,7 +123,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
             $allowedElements = GeneralUtility::trimExplode(',', strtolower($allowedElements), true);
             foreach (['jpg', 'png', 'gif'] as $element) {
                 if (in_array($element, $allowedElements)) {
-                    $assetTypes[] = BynderDriver::ASSET_TYPE_VIDEO;
+                    $assetTypes[] = BynderDriver::ASSET_TYPE_IMAGE;
                     break;
                 }
             }

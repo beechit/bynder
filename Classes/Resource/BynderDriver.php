@@ -9,27 +9,25 @@ namespace BeechIt\Bynder\Resource;
  * All code (c) Beech.it all rights reserved
  */
 use BeechIt\Bynder\Exception\NotImplementedException;
-use BeechIt\Bynder\Service\BynderService;
-use Bynder\Api\Impl\AssetBankManager;
+use BeechIt\Bynder\Resource\Helper\BynderHelper;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
 use TYPO3\CMS\Core\Resource\Exception;
+use TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\OnlineMediaHelperRegistry;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Class BynderDriver
  */
 class BynderDriver implements DriverInterface
 {
+    use \BeechIt\Bynder\Traits\BynderService;
+
     const KEY = 'bynder';
 
     const ASSET_TYPE_VIDEO = 'video';
     const ASSET_TYPE_IMAGE = 'image';
-
-    /**
-     * @var array
-     */
-    protected static $tempFiles = [];
 
     /**
      * @var string
@@ -58,28 +56,8 @@ class BynderDriver implements DriverInterface
     protected $configuration = [];
 
     /**
-     * @var AssetBankManager
+     * Processes the configuration for this driver.
      */
-    protected $assetBankManager;
-
-    /**
-     * @var BynderService
-     */
-    protected $bynderService;
-
-    /**
-     * Creates this object.
-     *
-     * @param array $configuration
-     */
-    public function __construct(array $configuration = [])
-    {
-        $this->capabilities =
-            ResourceStorage::CAPABILITY_BROWSABLE
-            | ResourceStorage::CAPABILITY_PUBLIC
-            | ResourceStorage::CAPABILITY_WRITABLE;
-    }
-
     public function processConfiguration()
     {
     }
@@ -123,8 +101,16 @@ class BynderDriver implements DriverInterface
         return $this->capabilities;
     }
 
+    /**
+     * Initializes this object. This is called by the storage after the driver
+     * has been attached.
+     */
     public function initialize()
     {
+        $this->capabilities =
+            ResourceStorage::CAPABILITY_BROWSABLE
+            | ResourceStorage::CAPABILITY_PUBLIC
+            | ResourceStorage::CAPABILITY_WRITABLE;
     }
 
     /**
@@ -155,9 +141,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Cleans a fileName from not allowed characters
+     *
      * @param string $fileName
-     * @param string $charset
-     * @return string
+     * @param string $charset Charset of the a fileName (defaults to current charset; depending on context)
+     * @return string the cleaned filename
      */
     public function sanitizeFileName($fileName, $charset = '')
     {
@@ -166,15 +154,21 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Hashes a file identifier, taking the case sensitivity of the file system
+     * into account. This helps mitigating problems with case-insensitive
+     * databases.
+     *
      * @param string $identifier
      * @return string
      */
     public function hashIdentifier($identifier)
     {
-        return sha1($identifier);
+        return $this->hash($identifier, 'sha1');
     }
 
     /**
+     * Returns the identifier of the root level folder of the storage.
+     *
      * @return string
      */
     public function getRootLevelFolder()
@@ -183,6 +177,8 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Returns the identifier of the default folder new files should be put into.
+     *
      * @return string
      */
     public function getDefaultFolder()
@@ -210,6 +206,9 @@ class BynderDriver implements DriverInterface
      */
     public function getPublicUrl($identifier)
     {
+        DebuggerUtility::var_dump(__METHOD__);
+        return $identifier;
+
         $format = '';
         if (preg_match('/^processed_([0-9A-Z\-]{35})_([a-z]+)/', $identifier, $matches)) {
             $identifier = $matches[1];
@@ -245,41 +244,63 @@ class BynderDriver implements DriverInterface
         }
     }
 
+    /**
+     * Creates a folder, within a parent folder.
+     * If no parent folder is given, a root level folder will be created
+     *
+     * @param string $newFolderName
+     * @param string $parentFolderIdentifier
+     * @param bool $recursive
+     * @return string the Identifier of the new folder
+     * @throws NotImplementedException
+     */
     public function createFolder($newFolderName, $parentFolderIdentifier = '', $recursive = false)
     {
         throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045381);
     }
 
+    /**
+     * Renames a folder in this storage.
+     *
+     * @param string $folderIdentifier
+     * @param string $newName
+     * @return array A map of old to new file identifiers of all affected resources
+     * @throws NotImplementedException
+     */
     public function renameFolder($folderIdentifier, $newName)
     {
         throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045382);
     }
 
+    /**
+     * Removes a folder in filesystem.
+     *
+     * @param string $folderIdentifier
+     * @param bool $deleteRecursively
+     * @return bool
+     * @throws NotImplementedException
+     */
     public function deleteFolder($folderIdentifier, $deleteRecursively = false)
     {
         throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045383);
     }
 
+
     /**
+     * Checks if a file exists.
+     *
      * @param string $fileIdentifier
      * @return bool
      */
     public function fileExists($fileIdentifier)
     {
         // We just assume that the processed file exists as this is just a CDN link
-        if ($this->isProcessedFile($fileIdentifier)) {
-            return true;
-        }
-
-        try {
-            $asset = $this->getBynderService()->getMediaInfo($fileIdentifier);
-            return true;
-        } catch (\Exception $exception) {
-            return false;
-        }
+        return (!empty($fileIdentifier));
     }
 
     /**
+     * Checks if a folder exists.
+     *
      * @param string $folderIdentifier
      * @return bool
      */
@@ -290,23 +311,29 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Checks if a folder contains files and (if supported) other folders.
+     *
      * @param string $folderIdentifier
-     * @return bool
+     * @return bool TRUE if there are no files and folders within $folder
      */
     public function isFolderEmpty($folderIdentifier)
     {
-        // We just say that every folder has some content as
-        // Bynder doesn't know the concept of folders and we don't want
-        // any call like deleteFolder()
-        return false;
+        // We only know the root folder
+        return $folderIdentifier === $this->rootFolder;
     }
 
     /**
-     * @param string $localFilePath
+     * Adds a file from the local server hard disk to a given path in TYPO3s
+     * virtual file system. This assumes that the local file exists, so no
+     * further check is done here! After a successful the original file must
+     * not exist anymore.
+     *
+     * @param string $localFilePath (within PATH_site)
      * @param string $targetFolderIdentifier
-     * @param string $newFileName
-     * @param bool $removeOriginal
-     * @return string|void
+     * @param string $newFileName optional, if not given original name is used
+     * @param bool $removeOriginal if set the original file will be removed
+     *                                after successful operation
+     * @return string the identifier of the new file
      * @throws NotImplementedException
      */
     public function addFile($localFilePath, $targetFolderIdentifier, $newFileName = '', $removeOriginal = true)
@@ -315,9 +342,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Creates a new (empty) file and returns the identifier.
+     *
      * @param string $fileName
      * @param string $parentFolderIdentifier
-     * @return string|void
+     * @return string
      * @throws NotImplementedException
      */
     public function createFile($fileName, $parentFolderIdentifier)
@@ -326,10 +355,14 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Copies a file *within* the current storage.
+     * Note that this is only about an inner storage copy action,
+     * where a file is just copied to another folder in the same storage.
+     *
      * @param string $fileIdentifier
      * @param string $targetFolderIdentifier
      * @param string $fileName
-     * @return string|void
+     * @return string the Identifier of the new file
      * @throws NotImplementedException
      */
     public function copyFileWithinStorage($fileIdentifier, $targetFolderIdentifier, $fileName)
@@ -338,9 +371,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Renames a file in this storage.
+     *
      * @param string $fileIdentifier
-     * @param string $newName
-     * @return string|void
+     * @param string $newName The target path (including the file name!)
+     * @return string The identifier of the file after renaming
      * @throws NotImplementedException
      */
     public function renameFile($fileIdentifier, $newName)
@@ -349,9 +384,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Replaces a file with file in local file system.
+     *
      * @param string $fileIdentifier
      * @param string $localFilePath
-     * @return bool|void
+     * @return bool TRUE if the operation succeeded
      * @throws NotImplementedException
      */
     public function replaceFile($fileIdentifier, $localFilePath)
@@ -360,8 +397,12 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Removes a file from the filesystem. This does not check if the file is
+     * still used or if it is a bad idea to delete it for some other reason
+     * this has to be taken care of in the upper layers (e.g. the Storage)!
+     *
      * @param string $fileIdentifier
-     * @return bool
+     * @return bool TRUE if deleting the file succeeded
      * @throws NotImplementedException
      */
     public function deleteFile($fileIdentifier)
@@ -401,10 +442,14 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Moves a file *within* the current storage.
+     * Note that this is only about an inner-storage move action,
+     * where a file is just moved to another folder in the same storage.
+     *
      * @param string $fileIdentifier
      * @param string $targetFolderIdentifier
      * @param string $newFileName
-     * @return string|void
+     * @return string
      * @throws NotImplementedException
      */
     public function moveFileWithinStorage($fileIdentifier, $targetFolderIdentifier, $newFileName)
@@ -413,10 +458,12 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Folder equivalent to moveFileWithinStorage().
+     *
      * @param string $sourceFolderIdentifier
      * @param string $targetFolderIdentifier
      * @param string $newFolderName
-     * @return array|void
+     * @return array All files which are affected, map of old => new file identifiers
      * @throws NotImplementedException
      */
     public function moveFolderWithinStorage($sourceFolderIdentifier, $targetFolderIdentifier, $newFolderName)
@@ -425,10 +472,12 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Folder equivalent to copyFileWithinStorage().
+     *
      * @param string $sourceFolderIdentifier
      * @param string $targetFolderIdentifier
      * @param string $newFolderName
-     * @return bool|void
+     * @return void
      * @throws NotImplementedException
      */
     public function copyFolderWithinStorage($sourceFolderIdentifier, $targetFolderIdentifier, $newFolderName)
@@ -437,28 +486,26 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Returns the contents of a file. Beware that this requires to load the
+     * complete file into memory and also may require fetching the file from an
+     * external location. So this might be an expensive operation (both in terms
+     * of processing resources and money) for large files.
+     *
      * @param string $fileIdentifier
-     * @return string
-     * @throws Exception\FileDoesNotExistException
+     * @return string The file contents
+     * @throws NotImplementedException
      */
     public function getFileContents($fileIdentifier)
     {
-        try {
-            $downloadLocation = $this->getAssetBankManager()->getMediaDownloadLocation($fileIdentifier)->wait();
-            return file_get_contents($downloadLocation['s3_file']);
-        } catch (\Exception $exception) {
-            throw new Exception\FileDoesNotExistException(
-                sprintf('Requested file "%s" coudn\'t be found', $fileIdentifier),
-                1519115242,
-                $exception
-            );
-        }
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1530716278);
     }
 
     /**
+     * Sets the contents of a file to the specified value.
+     *
      * @param string $fileIdentifier
      * @param string $contents
-     * @return int|void
+     * @return int The number of bytes written to the file
      * @throws NotImplementedException
      */
     public function setFileContents($fileIdentifier, $contents)
@@ -467,21 +514,20 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Checks if a file inside a folder exists
+     *
      * @param string $fileName
      * @param string $folderIdentifier
      * @return bool
      */
     public function fileExistsInFolder($fileName, $folderIdentifier)
     {
-        if ($folderIdentifier !== $this->rootFolder) {
-            return false;
-        }
-
-        // @todo: find a file by name instead of identifier
-        return false;
+        return !empty($fileName) && ($this->rootFolder === $folderIdentifier);
     }
 
     /**
+     * Checks if a folder inside a folder exists.
+     *
      * @param string $folderName
      * @param string $folderIdentifier
      * @return bool
@@ -492,12 +538,27 @@ class BynderDriver implements DriverInterface
         return false;
     }
 
+    /**
+     * Returns a path to a local copy of a file for processing it. When changing the
+     * file, you have to take care of replacing the current version yourself!
+     *
+     * @param string $fileIdentifier
+     * @param bool $writable Set this to FALSE if you only need the file for read
+     *                       operations. This might speed up things, e.g. by using
+     *                       a cached local version. Never modify the file if you
+     *                       have set this flag!
+     * @return string The path to the file on the local disk
+     * @throws NotImplementedException
+     */
     public function getFileForLocalProcessing($fileIdentifier, $writable = true)
     {
-        return $this->saveFileToTemporaryPath($fileIdentifier);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1530778712);
     }
 
     /**
+     * Returns the permissions of a file/folder as an array
+     * (keys r, w) of boolean flags
+     *
      * @param string $identifier
      * @return array
      */
@@ -515,41 +576,38 @@ class BynderDriver implements DriverInterface
      * buffer before. Will be taken care of by the Storage.
      *
      * @param string $identifier
-     * @throws Exception\FileDoesNotExistException
+     * @throws NotImplementedException
      */
     public function dumpFileContents($identifier)
     {
-        try {
-            $downloadLocation = $this->getAssetBankManager()->getMediaDownloadLocation($identifier)->wait();
-            readfile($downloadLocation['s3_file'], 0);
-        } catch (\Exception $exception) {
-            throw new Exception\FileDoesNotExistException(
-                sprintf('Requested file "%s" coudn\'t be found', $identifier),
-                1519115242,
-                $exception
-            );
-        }
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1530716441);
     }
 
     /**
+     * Checks if a given identifier is within a container, e.g. if
+     * a file or folder is within another folder.
+     * This can e.g. be used to check for web-mounts.
+     *
+     * Hint: this also needs to return TRUE if the given identifier
+     * matches the container identifier to allow access to the root
+     * folder of a filemount.
+     *
      * @param string $folderIdentifier
-     * @param string $identifier
-     * @return bool
+     * @param string $identifier identifier to be checked against $folderIdentifier
+     * @return bool TRUE if $content is within or matches $folderIdentifier
      */
     public function isWithin($folderIdentifier, $identifier)
     {
-        if ($folderIdentifier === $this->rootFolder) {
-            return true;
-        } else {
-            return false;
-        }
+        return ($folderIdentifier === $this->rootFolder);
     }
 
     /**
+     * Returns information about a file.
+     *
      * @param string $fileIdentifier
-     * @param array $propertiesToExtract
+     * @param array $propertiesToExtract Array of properties which are be extracted
+     *                                   If empty all will be extracted
      * @return array
-     * @throws Exception\FileDoesNotExistException
      */
     public function getFileInfoByIdentifier($fileIdentifier, array $propertiesToExtract = [])
     {
@@ -557,20 +615,14 @@ class BynderDriver implements DriverInterface
             $fileIdentifier = $matches[1];
         }
 
-        try {
-            $mediaInfo = $this->getBynderService()->getMediaInfo($fileIdentifier);
-        } catch (\Exception $exception) {
-            throw new Exception\FileDoesNotExistException(
-                sprintf('Requested file "%s" coudn\'t be found', $fileIdentifier),
-                1519115242,
-                $exception
-            );
-        }
-
-        return $this->extractFileInformation($mediaInfo, $propertiesToExtract);
+        $bynderHelper = GeneralUtility::makeInstance(BynderHelper::class, 'bynder');
+        $fileInfo = $bynderHelper->extractMetaData($fileIdentifier, $propertiesToExtract);
+        return $fileInfo;
     }
 
     /**
+     * Returns information about a folder.
+     *
      * @param string $folderIdentifier
      * @return array
      */
@@ -586,9 +638,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Returns the identifier of a file inside the folder
+     *
      * @param string $fileName
      * @param string $folderIdentifier
-     * @return string
+     * @return string file identifier
      */
     public function getFileInFolder($fileName, $folderIdentifier)
     {
@@ -596,14 +650,20 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Returns a list of files inside the specified path
+     *
      * @param string $folderIdentifier
      * @param int $start
      * @param int $numberOfItems
      * @param bool $recursive
-     * @param array $filenameFilterCallbacks
-     * @param string $sort
-     * @param bool $sortRev
-     * @return array
+     * @param array $filenameFilterCallbacks callbacks for filtering the items
+     * @param string $sort Property name used to sort the items.
+     *                     Among them may be: '' (empty, no sorting), name,
+     *                     fileext, size, tstamp and rw.
+     *                     If a driver does not support the given property, it
+     *                     should fall back to "name".
+     * @param bool $sortRev TRUE to indicate reverse sorting (last to first)
+     * @return array of FileIdentifiers
      */
     public function getFilesInFolder($folderIdentifier, $start = 0, $numberOfItems = 0, $recursive = false, array $filenameFilterCallbacks = [], $sort = '', $sortRev = false)
     {
@@ -611,9 +671,11 @@ class BynderDriver implements DriverInterface
     }
 
     /**
-     * @param string $folderName
+     * Returns the identifier of a folder inside the folder
+     *
+     * @param string $folderName The name of the target folder
      * @param string $folderIdentifier
-     * @return string
+     * @return string folder identifier
      */
     public function getFolderInFolder($folderName, $folderIdentifier)
     {
@@ -621,25 +683,34 @@ class BynderDriver implements DriverInterface
     }
 
     /**
+     * Returns a list of folders inside the specified path
+     *
      * @param string $folderIdentifier
      * @param int $start
      * @param int $numberOfItems
      * @param bool $recursive
-     * @param array $folderNameFilterCallbacks
-     * @param string $sort
-     * @param bool $sortRev
-     * @return array
+     * @param array $folderNameFilterCallbacks callbacks for filtering the items
+     * @param string $sort Property name used to sort the items.
+     *                     Among them may be: '' (empty, no sorting), name,
+     *                     fileext, size, tstamp and rw.
+     *                     If a driver does not support the given property, it
+     *                     should fall back to "name".
+     * @param bool $sortRev TRUE to indicate reverse sorting (last to first)
+     * @return array of Folder Identifier
      */
     public function getFoldersInFolder($folderIdentifier, $start = 0, $numberOfItems = 0, $recursive = false, array $folderNameFilterCallbacks = [], $sort = '', $sortRev = false)
     {
         return [];
     }
 
+
     /**
-     * @param string $folderIdentifier
+     * Returns the number of files inside the specified path
+     *
+     * @param string  $folderIdentifier
      * @param bool $recursive
-     * @param array $filenameFilterCallbacks
-     * @return int
+     * @param array   $filenameFilterCallbacks callbacks for filtering the items
+     * @return int Number of files in folder
      */
     public function countFilesInFolder($folderIdentifier, $recursive = false, array $filenameFilterCallbacks = [])
     {
@@ -647,10 +718,12 @@ class BynderDriver implements DriverInterface
     }
 
     /**
-     * @param string $folderIdentifier
+     * Returns the number of folders inside the specified path
+     *
+     * @param string  $folderIdentifier
      * @param bool $recursive
-     * @param array $folderNameFilterCallbacks
-     * @return int
+     * @param array   $folderNameFilterCallbacks callbacks for filtering the items
+     * @return int Number of folders in folder
      */
     public function countFoldersInFolder($folderIdentifier, $recursive = false, array $folderNameFilterCallbacks = [])
     {
@@ -666,162 +739,4 @@ class BynderDriver implements DriverInterface
         return (bool)preg_match('/^processed_([0-9A-Z\-]{35})_([a-z]+)/', $fileIdentifier);
     }
 
-    /**
-     * @return AssetBankManager
-     * @throws \InvalidArgumentException
-     */
-    protected function getAssetBankManager(): AssetBankManager
-    {
-        if ($this->assetBankManager === null) {
-            $this->assetBankManager = $this->getBynderService()
-                ->getBynderApi()
-                ->getAssetBankManager();
-        }
-
-        return $this->assetBankManager;
-    }
-
-    /**
-     * @return BynderService
-     * @throws \InvalidArgumentException
-     */
-    protected function getBynderService(): BynderService
-    {
-        if ($this->bynderService === null) {
-            $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-        }
-
-        return $this->bynderService;
-    }
-
-    /**
-     * Extracts information about a file from the filesystem.
-     *
-     * @param array $mediaInfo as returned from getAssetBankManager()->getMediaInfo()
-     * @param array $propertiesToExtract array of properties which should be returned, if empty all will be extracted
-     * @return array
-     */
-    protected function extractFileInformation(array $mediaInfo, array $propertiesToExtract = []): array
-    {
-        if (empty($propertiesToExtract)) {
-            $propertiesToExtract = [
-                'size',
-                'atime',
-                'mtime',
-                'ctime',
-                'mimetype',
-                'name',
-                'extension',
-                'identifier',
-                'identifier_hash',
-                'storage',
-                'folder_hash'
-            ];
-        }
-        $fileInformation = [];
-        foreach ($propertiesToExtract as $property) {
-            $fileInformation[$property] = $this->getSpecificFileInformation($mediaInfo, $property);
-        }
-        return $fileInformation;
-    }
-
-    /**
-     * Extracts a specific FileInformation from the FileSystems.
-     *
-     * @param array $mediaInfo
-     * @param string $property
-     *
-     * @return bool|int|string
-     * @throws \InvalidArgumentException
-     */
-    protected function getSpecificFileInformation($mediaInfo, $property)
-    {
-        switch ($property) {
-            case 'size':
-                return $mediaInfo['fileSize'];
-            case 'atime':
-                return strtotime($mediaInfo['dateModified']);
-            case 'mtime':
-                return strtotime($mediaInfo['dateModified']);
-            case 'ctime':
-                return strtotime($mediaInfo['dateCreated']);
-            case 'name':
-                return $mediaInfo['name'] . '.' . $mediaInfo['extension'][0];
-            case 'mimetype':
-                // @todo: find beter way to determine mimetype
-                return $mediaInfo['type'] . '/' . $mediaInfo['extension'][0];
-            case 'identifier':
-                return $mediaInfo['id'];
-            case 'extension':
-                return $mediaInfo['extension'][0];
-            case 'storage':
-                return $this->storageUid;
-            case 'identifier_hash':
-                return $this->hashIdentifier($mediaInfo['id']);
-            case 'folder_hash':
-                return $this->hashIdentifier('');
-
-            // Metadata
-            case 'title':
-                return $mediaInfo['name'];
-            case 'description':
-                return $mediaInfo['description'];
-            case 'width':
-                return $mediaInfo['width'];
-            case 'height':
-                return $mediaInfo['height'];
-            case 'copyright':
-                return $mediaInfo['copyright'];
-            case 'keywords':
-                return implode(', ', $mediaInfo['tags'] ?? []);
-            default:
-                throw new \InvalidArgumentException(sprintf('The information "%s" is not available.', $property), 1519130380);
-        }
-    }
-
-    /**
-     * Save a file to a temporary path and returns that path.
-     *
-     * @param string $fileIdentifier
-     * @return string The temporary path
-     * @throws \RuntimeException
-     * @throws Exception\FileDoesNotExistException
-     */
-    protected function saveFileToTemporaryPath($fileIdentifier): string
-    {
-        $temporaryPath = $this->getTemporaryPathForFile($fileIdentifier);
-        $result = file_put_contents($temporaryPath, $this->getFileContents($fileIdentifier));
-        if ($result === false) {
-            throw new \RuntimeException(
-                'Copying file "' . $fileIdentifier . '" to temporary path "' . $temporaryPath . '" failed.',
-                1519208427
-            );
-        }
-        return $temporaryPath;
-    }
-
-    /**
-     * Returns a temporary path for a given file, including the file extension.
-     *
-     * @param string $fileIdentifier
-     * @return string
-     * @throws Exception\FileDoesNotExistException
-     */
-    protected function getTemporaryPathForFile($fileIdentifier): string
-    {
-        list($fileExtension) = $this->getFileInfoByIdentifier($fileIdentifier, ['extension']);
-        $tempFile = GeneralUtility::tempnam('fal-tempfile-', '.' . $fileExtension);
-
-        return self::$tempFiles[] = $tempFile;
-    }
-
-    /**
-     * Cleanup temp files that a still present
-     */
-    public function __destruct()
-    {
-        foreach (self::$tempFiles as $tempFile) {
-            GeneralUtility::unlink_tempfile($tempFile);
-        }
-    }
 }
