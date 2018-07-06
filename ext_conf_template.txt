@@ -2,7 +2,7 @@
 url =
 
 # cat=basic/API; type=string; label=OnTheFly derivative's Url (optional);(https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq)
-otfBaseUrl =
+otf_base_url =
 
 # cat=basic/API; type=string; label=Bynder OAuth consumer (key)
 consumer_key =
@@ -15,4 +15,7 @@ token_key =
 
 # cat=basic/API; type=string; label=Bynder OAuth token secret
 token_secret =
+
+# cat=basic/API; type=string; label=Image Unavailable: Displayed image when file is not retrievable like when the file status is deleted or unpublished
+image_unavailable = EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg
 

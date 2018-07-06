@@ -7,10 +7,15 @@ namespace BeechIt\Bynder\Slot;
  * Date: 26-2-18
  * All code (c) Beech.it all rights reserved
  */
-use TYPO3\CMS\Core\Resource\AbstractFile;
+use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
+use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
+use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\ResourceInterface;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Class PublicUrlSlot
@@ -39,8 +44,33 @@ class PublicUrlSlot
         $relativeToCurrentScript,
         array $urlData
     ) {
-        if ($resourceObject instanceof AbstractFile && $resourceObject->getProperty('bynder_url')) {
-            $urlData['publicUrl'] = $resourceObject->getProperty('bynder_url');
+        if ($resourceObject instanceof FileInterface && $resourceObject->getProperty('bynder') === true) {
+            if ($resourceObject->getProperty('bynder_url')) {
+                $urlData['publicUrl'] = $resourceObject->getProperty('bynder_url');
+            } else {
+                $urlData['publicUrl'] = $this->getUnavailableImage($relativeToCurrentScript);
+            }
+        } elseif ($driver instanceof BynderDriver) {
+            try {
+                $urlData['publicUrl'] = $driver->getPublicUrl($resourceObject->getIdentifier());
+            } catch (FileDoesNotExistException $e) {
+                $urlData['publicUrl'] = $this->getUnavailableImage($relativeToCurrentScript);
+            }
         }
     }
+
+    /**
+     * @param bool $relativeToCurrentScript
+     * @return string
+     */
+    protected function getUnavailableImage($relativeToCurrentScript = false): string
+    {
+        $configuration = \BeechIt\Bynder\Utility\ConfigurationUtility::getExtensionConfiguration();
+        $path = GeneralUtility::getFileAbsFileName(
+            $configuration['image_unavailable'] ??
+            'EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg');
+
+        return ($relativeToCurrentScript) ? PathUtility::getAbsoluteWebPath($path) : str_replace(PATH_site, '', $path);
+    }
+
 }

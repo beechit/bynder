@@ -8,6 +8,8 @@ namespace BeechIt\Bynder\Resource;
  * All code (c) Beech.it all rights reserved
  */
 use BeechIt\Bynder\Service\BynderService;
+use GuzzleHttp\Exception\ClientException;
+use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
@@ -15,6 +17,7 @@ use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
 use TYPO3\CMS\Core\Resource\Service\FileProcessingService;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Class AssetProcessing
@@ -69,10 +72,20 @@ class AssetProcessing implements SingletonInterface
             return;
         }
 
-        $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+        try {
+            $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+        } catch (ClientException $e) {
+            $mediaInfo = [
+                'isPublic' => false,
+                'thumbnails' => [
+                    'thul' => '',
+                    'webimage' => '',
+                    'mini' => '',
+                ]
+            ];
+        }
 
         $processingConfiguration = $processedFile->getProcessingConfiguration();
-
         // The CONTEXT_IMAGEPREVIEW task only gives max dimensions
         if ($taskType === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
             if (!empty($processingConfiguration['width'])) {
@@ -104,6 +117,7 @@ class AssetProcessing implements SingletonInterface
         // Update existing processed file
         $processedFile->updateProperties(
             [
+                'bynder' => true,
                 'width' => $fileInfo['width'],
                 'height' => $fileInfo['height'],
                 'checksum' => $checksum,
