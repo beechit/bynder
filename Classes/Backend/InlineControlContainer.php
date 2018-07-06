@@ -8,10 +8,10 @@ namespace BeechIt\Bynder\Backend;
  * All code (c) Beech.it all rights reserved
  */
 use BeechIt\Bynder\Resource\BynderDriver;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class InlineControlContainer
@@ -64,13 +64,14 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
 
         $foreign_table = $inlineConfiguration['foreign_table'];
         $allowed = $groupFieldConfiguration['allowed'];
+        $allowedAssetTypes = ConfigurationUtility::getAssetTypesByAllowedElements($groupFieldConfiguration['appearance']['elementBrowserAllowed']);
         $currentStructureDomObjectIdPrefix = $this->inlineStackProcessor->getCurrentStructureDomObjectIdPrefix($this->data['inlineFirstPid']);
         $objectPrefix = $currentStructureDomObjectIdPrefix . '-' . $foreign_table;
         $nameObject = $currentStructureDomObjectIdPrefix;
 
         $compactViewUrl = BackendUtility::getModuleUrl('bynder_compact_view', [
             'element' => 'bynder' . $this->inlineData['config'][$nameObject]['md5'],
-            'assetTypes' => $this->getAssetTypesByAllowedElements($groupFieldConfiguration['appearance']['elementBrowserAllowed'])
+            'assetTypes' => implode(',', $allowedAssetTypes)
         ]);
 
         $this->requireJsModules[] = 'TYPO3/CMS/Bynder/CompactView';
@@ -108,31 +109,5 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
             }
         }
         return false;
-    }
-
-    /**
-     * @param string $allowedElements
-     * @return string
-     */
-    protected function getAssetTypesByAllowedElements($allowedElements): string
-    {
-        $assetTypes = [];
-        if (empty($allowedElements)) {
-            $assetTypes = [BynderDriver::ASSET_TYPE_IMAGE, BynderDriver::ASSET_TYPE_VIDEO];
-        } else {
-            $allowedElements = GeneralUtility::trimExplode(',', strtolower($allowedElements), true);
-            foreach (['jpg', 'png', 'gif'] as $element) {
-                if (in_array($element, $allowedElements)) {
-                    $assetTypes[] = BynderDriver::ASSET_TYPE_IMAGE;
-                    break;
-                }
-            }
-
-            if (in_array('mp4', $allowedElements)) {
-                $assetTypes[] = BynderDriver::ASSET_TYPE_VIDEO;
-            }
-        }
-
-        return implode(',', $assetTypes);
     }
 }

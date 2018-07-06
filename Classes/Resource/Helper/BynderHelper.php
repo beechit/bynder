@@ -5,8 +5,10 @@ namespace BeechIt\Bynder\Resource\Helper;
 use BeechIt\Bynder\Resource\BynderDriver;
 use BeechIt\Bynder\Traits\BynderService;
 use BeechIt\Bynder\Traits\BynderStorage;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
 use TYPO3\CMS\Core\Resource\File;
+use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
@@ -17,9 +19,12 @@ use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
  */
 class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\AbstractOnlineMediaHelper
 {
-
     use BynderService;
     use BynderStorage;
+
+    const DERIVATIVES_WEB_IMAGE = 'webimage';
+    const DERIVATIVES_MINI = 'mini';
+    const DERIVATIVES_THUMBNAIL = 'thul';
 
     /**
      * Try to transform given URL to a File
@@ -31,6 +36,16 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
     public function transformUrlToFile($url, Folder $targetFolder): File
     {
         DebuggerUtility::var_dump(__METHOD__);
+    }
+
+    /**
+     * @param string $identifier
+     * @return array
+     * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
+     */
+    public function getBynderMediaInfo($identifier): array
+    {
+        return $this->getBynderService()->getMediaInfo($identifier);
     }
 
     /**
@@ -49,22 +64,18 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
             switch ($file->getMimeType()) {
                 case 'bynder/' . BynderDriver::ASSET_TYPE_IMAGE:
                     try {
-                        $mediaInfo = $this->getBynderService()->getMediaInfo($identifier);
+                        $mediaInfo = $this->getBynderMediaInfo($identifier);
                         return $mediaInfo['thumbnails']['webimage'];
                     } catch (\Exception $e) {
-                        return '/typo3conf/ext/bynder/Resources/Public/Icons/Extension.svg';
+                        return ConfigurationUtility::getUnavailableImage($relativeToCurrentScript);
                     }
                     break;
                 // TODO
                 // case 'bynder' . BynderDriver::ASSET_TYPE_DOCUMENT:
             }
         }
-        return null;
-    }
 
-    public function generatePublicUrl($file, $relativeToCurrentScript, $width, $height): string
-    {
-
+        return '';
     }
 
     /**
@@ -106,7 +117,7 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
     public function extractMetaData($identifier, $propertiesToExtract = [])
     {
         try {
-            $mediaInfo = $this->getBynderService()->getMediaInfo($identifier);
+            $mediaInfo = $mediaInfo = $this->getBynderMediaInfo($identifier);
             return $this->extractFileInformation($mediaInfo, $propertiesToExtract);
         } catch (\Exception $e) {
         }
@@ -114,10 +125,10 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
     }
 
     /**
-     * @param File $file
+     * @param FileInterface $file
      * @return string
      */
-    protected function getBynderFileIdentifier(File $file): string
+    protected function getBynderFileIdentifier(FileInterface $file): string
     {
         return $file->getProperty('identifier');
     }
@@ -214,7 +225,7 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
      * @throws FileDoesNotExistException
      * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
      */
-    protected function downloadThumbnailToTemporaryFilePath(File $file): string
+    protected function downloadThumbnailToTemporaryFilePath(File $file, $type = 'thul'): string
     {
         try {
             $mediaInfo = $this->getBynderService()->getMediaInfo($this->getBynderFileIdentifier($file));
@@ -259,5 +270,4 @@ class BynderHelper extends \TYPO3\CMS\Core\Resource\OnlineMedia\Helpers\Abstract
         $info = pathinfo($url);
         return $temporaryPath . $info['filename'] . '.' . $info['extension'];
     }
-
 }

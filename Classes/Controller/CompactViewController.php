@@ -8,7 +8,7 @@ namespace BeechIt\Bynder\Controller;
  * All code (c) Beech.it all rights reserved
  */
 
-use BeechIt\Bynder\Service\BynderService;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -23,6 +23,7 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
  */
 class CompactViewController
 {
+
     /**
      * Fluid Standalone View
      *
@@ -51,18 +52,12 @@ class CompactViewController
      */
     protected $layoutRootPaths = ['EXT:bynder/Resources/Private/Layouts/CompactView'];
 
-    /**
-     * @var BynderService
-     */
-    protected $bynderService;
 
     /**
      * CompactViewController constructor.
      */
     public function __construct()
     {
-        $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setPartialRootPaths($this->partialRootPaths);
         $this->view->setTemplateRootPaths($this->templateRootPaths);
@@ -82,7 +77,7 @@ class CompactViewController
 
         $this->view->assignMultiple([
             'language' => $this->getBackendUserAuthentication()->uc['lang'] ?: ($this->getBackendUserAuthentication()->user['lang'] ?: 'en_EN'),
-            'apiBaseUrl' => $this->bynderService->getApiBaseUrl(),
+            'apiBaseUrl' => ConfigurationUtility::getApiBaseUrl(),
             'element' => $request->getQueryParams()['element'],
             'assetTypes' => $request->getQueryParams()['assetTypes']
         ]);

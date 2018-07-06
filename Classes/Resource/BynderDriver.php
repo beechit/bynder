@@ -738,5 +738,4 @@ class BynderDriver implements DriverInterface
     {
         return (bool)preg_match('/^processed_([0-9A-Z\-]{35})_([a-z]+)/', $fileIdentifier);
     }
-
 }

@@ -34,7 +34,8 @@ unset($signalSlotDispatcher);
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['onlineMediaHelpers']['bynder'] = \BeechIt\Bynder\Resource\Helper\BynderHelper::class;
 
 $rendererRegistry = \TYPO3\CMS\Core\Resource\Rendering\RendererRegistry::getInstance();
-$rendererRegistry->registerRendererClass(\BeechIt\Bynder\Resource\Rendering\BynderRenderer::class);
+$rendererRegistry->registerRendererClass(\BeechIt\Bynder\Resource\Rendering\BynderVideoRenderer::class);
+$rendererRegistry->registerRendererClass(\BeechIt\Bynder\Resource\Rendering\BynderImageRenderer::class);
 unset($rendererRegistry);
 
 // Register hooks to post/delete usage registration

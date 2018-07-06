@@ -16,6 +16,10 @@ use BeechIt\Bynder\Resource\BynderDriver;
  */
 class ImageManipulationElement extends \TYPO3\CMS\Backend\Form\Element\ImageManipulationElement
 {
+    /**
+     * @return array
+     * @throws \TYPO3\CMS\Core\Imaging\ImageManipulation\InvalidConfigurationException
+     */
     public function render()
     {
         $resultArray = $this->initializeResultArray();

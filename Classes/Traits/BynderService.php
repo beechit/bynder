@@ -19,6 +19,4 @@ trait BynderService
     {
         return GeneralUtility::makeInstance(Service\BynderService::class);
     }
-
-
 }
