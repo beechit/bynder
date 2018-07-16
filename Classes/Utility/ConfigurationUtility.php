@@ -21,6 +21,7 @@ class ConfigurationUtility
     /**
      * @param string $allowedElements
      * @return array
+     * @throws InvalidExtensionConfigurationException
      */
     public static function getAssetTypesByAllowedElements($allowedElements): array
     {
@@ -50,6 +51,7 @@ class ConfigurationUtility
     /**
      * @param boolean $relativeToCurrentScript
      * @return string
+     * @throws InvalidExtensionConfigurationException
      */
     public static function getUnavailableImage($relativeToCurrentScript = false): string
     {
@@ -84,6 +86,24 @@ class ConfigurationUtility
     public static function getApiBaseUrl(): string
     {
         return static::cleanUrl((self::getExtensionConfiguration())['url']);
+    }
+
+    /**
+     * @return string
+     * @throws InvalidExtensionConfigurationException
+     */
+    public static function getOnTheFlyBaseUrl(): string
+    {
+        return static::cleanUrl((self::getExtensionConfiguration())['otf_base_url']);
+    }
+
+    /**
+     * @return boolean
+     * @throws InvalidExtensionConfigurationException
+     */
+    public static function isOnTheFlyConfigured(): bool
+    {
+        return !empty((self::getExtensionConfiguration())['otf_base_url']);
     }
 
     /**

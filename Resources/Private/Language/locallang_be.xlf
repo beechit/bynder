@@ -12,6 +12,10 @@
             <trans-unit id="compact_view.error-no-storage-access">
                 <source>Please make sure you have access to the Bynder file mount. This is needed to use the Bynder file picker</source>
             </trans-unit>
+            <trans-unit id="bynder.video.javascript_required">
+                <source><![CDATA[To view this video please enable JavaScript, and consider upgrading to a web browser
+                that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>]]></source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
