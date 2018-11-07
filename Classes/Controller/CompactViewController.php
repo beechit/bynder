@@ -8,10 +8,11 @@ namespace BeechIt\Bynder\Controller;
  * All code (c) Beech.it all rights reserved
  */
 
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use BeechIt\Bynder\Service\BynderService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Index\Indexer;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -22,6 +23,7 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
  */
 class CompactViewController
 {
+
     /**
      * Fluid Standalone View
      *
@@ -50,15 +52,12 @@ class CompactViewController
      */
     protected $layoutRootPaths = ['EXT:bynder/Resources/Private/Layouts/CompactView'];
 
-    /**
-     * @var BynderService
-     */
-    protected $bynderService;
 
+    /**
+     * CompactViewController constructor.
+     */
     public function __construct()
     {
-        $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setPartialRootPaths($this->partialRootPaths);
         $this->view->setTemplateRootPaths($this->templateRootPaths);
@@ -66,6 +65,8 @@ class CompactViewController
     }
 
     /**
+     * Action: Display compact view
+     *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
@@ -76,8 +77,9 @@ class CompactViewController
 
         $this->view->assignMultiple([
             'language' => $this->getBackendUserAuthentication()->uc['lang'] ?: ($this->getBackendUserAuthentication()->user['lang'] ?: 'en_EN'),
-            'apiBaseUrl' => $this->bynderService->getApiBaseUrl(),
+            'apiBaseUrl' => ConfigurationUtility::getApiBaseUrl(),
             'element' => $request->getQueryParams()['element'],
+            'assetTypes' => $request->getQueryParams()['assetTypes']
         ]);
 
         $response->getBody()->write($this->view->render());
@@ -85,6 +87,13 @@ class CompactViewController
         return $response;
     }
 
+    /**
+     * Action: Retrieve file from storage
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
     public function getFilesAction(ServerRequestInterface $request, ResponseInterface $response)
     {
         $files = [];
@@ -92,9 +101,9 @@ class CompactViewController
         $fileStorage = $this->getBynderStorage();
         foreach ($request->getParsedBody()['files'] ?? [] as $fileIdentifier) {
             $file = $fileStorage->getFile($fileIdentifier);
-            if ($file) {
+            if ($file instanceof File) {
                 // (Re)Fetch metadata
-                $this->getIndexer($file->getStorage())->extractMetaData($file);
+                $this->getIndexer($fileStorage)->extractMetaData($file);
                 $files[] = $file->getUid();
             }
         }
@@ -107,6 +116,9 @@ class CompactViewController
         return $response;
     }
 
+    /**
+     * @return ResourceStorage
+     */
     protected function getBynderStorage(): ResourceStorage
     {
         /** @var ResourceStorage $fileStorage */

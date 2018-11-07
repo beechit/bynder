@@ -8,6 +8,7 @@ namespace BeechIt\Bynder\Backend;
  * All code (c) Beech.it all rights reserved
  */
 use BeechIt\Bynder\Resource\BynderDriver;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
@@ -63,11 +64,15 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
 
         $foreign_table = $inlineConfiguration['foreign_table'];
         $allowed = $groupFieldConfiguration['allowed'];
+        $allowedAssetTypes = ConfigurationUtility::getAssetTypesByAllowedElements($groupFieldConfiguration['appearance']['elementBrowserAllowed']);
         $currentStructureDomObjectIdPrefix = $this->inlineStackProcessor->getCurrentStructureDomObjectIdPrefix($this->data['inlineFirstPid']);
         $objectPrefix = $currentStructureDomObjectIdPrefix . '-' . $foreign_table;
         $nameObject = $currentStructureDomObjectIdPrefix;
 
-        $compactViewUrl = BackendUtility::getModuleUrl('bynder_compact_view', ['element' => 'bynder' . $this->inlineData['config'][$nameObject]['md5']]);
+        $compactViewUrl = BackendUtility::getModuleUrl('bynder_compact_view', [
+            'element' => 'bynder' . $this->inlineData['config'][$nameObject]['md5'],
+            'assetTypes' => implode(',', $allowedAssetTypes)
+        ]);
 
         $this->requireJsModules[] = 'TYPO3/CMS/Bynder/CompactView';
         $buttonText = htmlspecialchars($languageService->sL('LLL:EXT:bynder/Resources/Private/Language/locallang_be.xlf:compact_view.button'));

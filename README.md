@@ -36,7 +36,7 @@ Next got the the extension configuration of EXT:bynder and fill in the needed ur
 | token_secret      | Bynder OAuth token secret                                                                        | Yes      |                                                        |
 | image_unavailable | Displayed image when file is not retrievable like when the file status is deleted or unpublished | *No*     | EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg |
 
-(1) See: https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq
+(1) See: https://help.bynder.com/Modules/Asset-Library/Modify-public-derivatives-on-the-fly.htm
 
 ### How to contribute
 

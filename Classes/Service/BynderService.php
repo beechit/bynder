@@ -7,11 +7,10 @@ namespace BeechIt\Bynder\Service;
  * Date: 19-2-18
  * All code (c) Beech.it all rights reserved
  */
-use BeechIt\Bynder\Exception\InvalidExtensionConfigurationException;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use Bynder\Api\BynderApiFactory;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -26,36 +25,6 @@ class BynderService implements SingletonInterface
     protected $bynderIntegrationId = '8517905e-6c2f-47c3-96ca-0312027bbc95';
 
     /**
-     * @var string
-     */
-    protected $apiBaseUrl;
-
-    /**
-     * @var string
-     */
-    protected $otfBaseUrl;
-
-    /**
-     * @var string
-     */
-    protected $oAuthConsumerKey;
-
-    /**
-     * @var string
-     */
-    protected $oAuthConsumerSecret;
-
-    /**
-     * @var string
-     */
-    protected $oAuthTokenKey;
-
-    /**
-     * @var string
-     */
-    protected $oAuthTokenSecret;
-
-    /**
      * @var \Bynder\Api\Impl\BynderApi
      */
     protected $bynderApi;
@@ -65,85 +34,13 @@ class BynderService implements SingletonInterface
      */
     protected $cache;
 
-    public function __construct()
-    {
-        $extensionConfiguration = \BeechIt\Bynder\Utility\ConfigurationUtility::getExtensionConfiguration();
-
-        $this->apiBaseUrl = $extensionConfiguration['url'] ?? '';
-        $this->otfBaseUrl = $extensionConfiguration['otf_base_url'] ?? '';
-        $this->oAuthConsumerKey = $extensionConfiguration['consumer_key'] ?? null;
-        $this->oAuthConsumerSecret = $extensionConfiguration['consumer_secret'] ?? null;
-        $this->oAuthTokenKey = $extensionConfiguration['token_key'] ?? null;
-        $this->oAuthTokenSecret = $extensionConfiguration['token_secret'] ?? null;
-
-        if (empty($this->apiBaseUrl) || empty($this->oAuthConsumerKey) || empty($this->oAuthConsumerSecret) || empty($this->oAuthTokenKey) || empty($this->oAuthTokenSecret)) {
-            throw new InvalidExtensionConfigurationException('Make sure all Bynder oAuth settings are set in extension manager', 1519051718);
-        }
-    }
-
     /**
      * @return \Bynder\Api\Impl\BynderApi
      * @throws \InvalidArgumentException
      */
     public function getBynderApi()
     {
-        return BynderApiFactory::create(
-            [
-                'consumerKey' => $this->oAuthConsumerKey,
-                'consumerSecret' => $this->oAuthConsumerSecret,
-                'token' => $this->oAuthTokenKey,
-                'tokenSecret' => $this->oAuthTokenSecret,
-                'baseUrl' => $this->apiBaseUrl
-            ]
-        );
-    }
-
-    /**
-     * @return string
-     */
-    public function getApiBaseUrl(): string
-    {
-        return $this->apiBaseUrl;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOtfBaseUrl(): string
-    {
-        return $this->otfBaseUrl;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOAuthConsumerKey(): string
-    {
-        return $this->oAuthConsumerKey;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOAuthConsumerSecret(): string
-    {
-        return $this->oAuthConsumerSecret;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOAuthTokenKey(): string
-    {
-        return $this->oAuthTokenKey;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOAuthTokenSecret(): string
-    {
-        return $this->oAuthTokenSecret;
+        return BynderApiFactory::create(ConfigurationUtility::getBynderApiFactoryCredentials());
     }
 
     /**

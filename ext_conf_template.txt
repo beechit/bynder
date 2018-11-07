@@ -1,7 +1,7 @@
-# cat=basic/API; type=string; label=Bynder Url (domain.bynder.com)
+# cat=basic/API; type=string; label=Bynder Url: bynder.yourwebsite.com
 url =
 
-# cat=basic/API; type=string; label=OnTheFly derivative's Url (optional);(https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq)
+# cat=basic/API; type=string; label=OnTheFly derivative's Url (optional): yourdomain.bynder.com; (https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq)
 otf_base_url =
 
 # cat=basic/API; type=string; label=Bynder OAuth consumer (key)
@@ -19,3 +19,8 @@ token_secret =
 # cat=basic/API; type=string; label=Image Unavailable: Displayed image when file is not retrievable like when the file status is deleted or unpublished
 image_unavailable = EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg
 
+# cat=basic/assets; type=string; label=File extensions for images; Used for images in your Bynder environment
+asset_type_image = jpg,png,gif
+
+# cat=basic/assets; type=string; label=File extensions for videos; Extensions used for video interaction in your Bynder environment
+asset_type_video = mp4,mov
