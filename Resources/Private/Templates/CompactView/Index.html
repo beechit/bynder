@@ -1,5 +1,4 @@
-<link rel="stylesheet" type="text/css"
-      href="https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/css/compactview_global-1.0.1.css">
+
 
 <div id="bynder-compactview"
      data-language="{language}"
@@ -13,25 +12,33 @@
      data-defaultEnvironment="{apiBaseUrl}"
      data-button-id="1"
 ></div>
-<script src="https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/js/client-1.0.1.min.js"></script>
+<script src="https://d8ejoa1fys2rk.cloudfront.net/5.0.5/modules/compactview/bynder-compactview-2-latest.js"></script>
 
 <div id="importedAssets"></div>
 <script>
     var element = ".{element}";
-    document.addEventListener('BynderAddMedia', function (e) {
-        var media = [],
-            selectedAssets = e.detail;
-        for (var i = 0; i < selectedAssets.length; i++) {
-            media.push(selectedAssets[i].id);
-        }
-        var details = {media: media, 'element': element},
-            parentDocument = parent.document,
-            contentIframe = parent.document.getElementById('typo3-contentIframe');
+    BynderCompactView.open({
+        onSuccess: function (selectedAssets) {
+            var media = [];
+            for (var i = 0; i < selectedAssets.length; i++) {
+                media.push(selectedAssets[i].databaseId);
+            }
+            var details = {media: media, 'element': element},
+                parentDocument = parent.document,
+                contentIframe = parent.document.getElementById('typo3-contentIframe');
 
-        if (contentIframe) {
-            parentDocument = contentIframe.contentDocument;
-        }
+            if (contentIframe) {
+                parentDocument = contentIframe.contentDocument;
+            }
 
-        parentDocument.dispatchEvent(new CustomEvent("BynderAddMedia", {"detail": details}));
+            parentDocument.dispatchEvent(new CustomEvent("BynderAddMedia", {"detail": details}));
+        },
+        collections: false,
+        assetTypes: ['image'],
+        container: document.getElementById('bynder-compactview'),
+        portal: {
+            url: "{apiBaseUrl}",
+            editable: false,
+        }
     });
 </script>
