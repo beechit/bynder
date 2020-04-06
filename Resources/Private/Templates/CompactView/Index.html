@@ -14,6 +14,7 @@
 ></div>
 <script src="https://d8ejoa1fys2rk.cloudfront.net/5.0.5/modules/compactview/bynder-compactview-2-latest.js"></script>
 
+
 <div id="importedAssets"></div>
 <script>
     var element = ".{element}";
@@ -37,7 +38,7 @@
         assetTypes: ['image'],
         container: document.getElementById('bynder-compactview'),
         portal: {
-            url: "{apiBaseUrl}",
+            url: document.getElementById('bynder-compactview').getAttribute('data-defaultEnvironment'),
             editable: false,
         }
     });
