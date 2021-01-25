@@ -28,16 +28,18 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
     {
         $selector = parent::renderPossibleRecordsSelectorTypeGroupDB($inlineConfiguration);
 
-        $button = $this->renderBynderButton($inlineConfiguration);
+        if ($this->displayBynderButton()) {
+            $button = $this->renderBynderButton($inlineConfiguration);
 
-        // Inject button before help-block
-        if (strpos($selector, '</div><div class="help-block">') > 0) {
-            $selector = str_replace('</div><div class="help-block">', $button . '</div><div class="help-block">', $selector);
-        // Try to inject it into the form-control container
-        } elseif (preg_match('/<\/div><\/div>$/i', $selector)) {
-            $selector = preg_replace('/<\/div><\/div>$/i', $button . '</div></div>', $selector);
-        } else {
-            $selector .= $button;
+            // Inject button before help-block
+            if (strpos($selector, '</div><div class="help-block">') > 0) {
+                $selector = str_replace('</div><div class="help-block">', $button . '</div><div class="help-block">', $selector);
+                // Try to inject it into the form-control container
+            } elseif (preg_match('/<\/div><\/div>$/i', $selector)) {
+                $selector = preg_replace('/<\/div><\/div>$/i', $button . '</div></div>', $selector);
+            } else {
+                $selector .= $button;
+            }
         }
 
         return $selector;
@@ -104,5 +106,21 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
             }
         }
         return false;
+    }
+
+    /**
+     * Check if the BE user has access to the Bynder compact view
+     *
+     * Admin has access when there is a resource storage with driver type bynder
+     * Editors need to have access to a mount of that storage
+     *
+     * @return bool
+     */
+    protected function displayBynderButton(): bool
+    {
+        $backendUser = $this->getBackendUserAuthentication();
+        $filePermissions = $backendUser->getFilePermissions();
+
+        return $backendUser->isAdmin() || (bool)$filePermissions['addFileViaBynder'];
     }
 }
