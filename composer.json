@@ -22,7 +22,7 @@
 	],
 	"license": ["GPL-2.0+"],
 	"require": {
-		"typo3/cms-core": "^8.7.13 || ^9.3",
+		"typo3/cms-core": "^8.7.13 || ^9.5.23",
 		"Bynder/bynder-php-sdk": "^1.0.5"
 	},
 	"require-dev": {
@@ -30,7 +30,6 @@
 		"nimut/testing-framework": "^2.0"
 	},
 	"replace": {
-		"bynder": "self.version",
 		"typo3-ter/bynder": "self.version"
 	},
 	"autoload": {
