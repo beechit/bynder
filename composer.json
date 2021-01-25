@@ -23,7 +23,7 @@
 	"license": ["GPL-2.0+"],
 	"require": {
 		"typo3/cms-core": "^8.7.13 || ^9.5.23",
-		"Bynder/bynder-php-sdk": "^1.0.5"
+		"bynder/bynder-php-sdk": "^1.0.5"
 	},
 	"require-dev": {
 		"friendsofphp/php-cs-fixer": "^2.0",
