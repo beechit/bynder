@@ -22,7 +22,7 @@
 	],
 	"license": ["GPL-2.0+"],
 	"require": {
-		"typo3/cms-core": "^8.7.13 || ^9.5.23 || ^10.4.13",
+		"typo3/cms-core": "^10.4.13",
 		"bynder/bynder-php-sdk": "^1.0.5"
 	},
 	"require-dev": {

@@ -1,0 +1,28 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  BeechIt\Bynder\:
+    resource: '../Classes/*'
+
+  fluid_view.bynder:
+    class: TYPO3Fluid\Fluid\View\ViewInterface
+    factory: '@BeechIt\Bynder\Factory\StandaloneViewFactory'
+
+  storage.bynder:
+    class: TYPO3\CMS\Core\Resource\ResourceStorageInterface
+    factory: '@BeechIt\Bynder\Factory\BynderStorageFactory'
+
+  indexer.bynder_storage:
+    class: TYPO3\CMS\Core\Resource\Index\Indexer
+    arguments:
+      $storage: '@storage.bynder'
+
+  BeechIt\Bynder\Controller\CompactViewController:
+    public: true
+    arguments:
+      $bynderStorage: '@storage.bynder'
+      $view: '@fluid_view.bynder'
+      $indexer: '@indexer.bynder_storage'

@@ -7,7 +7,10 @@ namespace BeechIt\Bynder\Slot;
  * Date: 26-2-18
  * All code (c) Beech.it all rights reserved
  */
+
 use BeechIt\Bynder\Resource\BynderDriver;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
 use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
 use TYPO3\CMS\Core\Resource\FileInterface;
@@ -15,7 +18,6 @@ use TYPO3\CMS\Core\Resource\ResourceInterface;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Class PublicUrlSlot
@@ -30,11 +32,11 @@ class PublicUrlSlot
     /**
      * Generate public url for file
      *
-     * @param ResourceStorage $storage
-     * @param DriverInterface $driver
-     * @param ResourceInterface $resourceObject
+     * @param  ResourceStorage  $storage
+     * @param  DriverInterface  $driver
+     * @param  ResourceInterface  $resourceObject
      * @param $relativeToCurrentScript
-     * @param array $urlData
+     * @param  array  $urlData
      * @return void
      */
     public function getPublicUrl(
@@ -60,17 +62,17 @@ class PublicUrlSlot
     }
 
     /**
-     * @param bool $relativeToCurrentScript
+     * @param  bool  $relativeToCurrentScript
      * @return string
      */
     protected function getUnavailableImage($relativeToCurrentScript = false): string
     {
-        $configuration = \BeechIt\Bynder\Utility\ConfigurationUtility::getExtensionConfiguration();
+        $configuration = ConfigurationUtility::getExtensionConfiguration();
         $path = GeneralUtility::getFileAbsFileName(
             $configuration['image_unavailable'] ??
-            'EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg');
+            'EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg'
+        );
 
-        return ($relativeToCurrentScript) ? PathUtility::getAbsoluteWebPath($path) : str_replace(PATH_site, '', $path);
+        return ($relativeToCurrentScript) ? PathUtility::getAbsoluteWebPath($path) : str_replace(Environment::getPublicPath() . '/', '', $path);
     }
-
 }

@@ -7,13 +7,15 @@ namespace BeechIt\Bynder\Metadata;
  * Date: 20-2-18
  * All code (c) Beech.it all rights reserved
  */
+
 use BeechIt\Bynder\Resource\BynderDriver;
-use TYPO3\CMS\Core\Resource;
+use TYPO3\CMS\Core\Resource\File;
+use TYPO3\CMS\Core\Resource\Index\ExtractorInterface;
 
 /**
  * Class Extractor
  */
-class Extractor implements Resource\Index\ExtractorInterface
+class Extractor implements ExtractorInterface
 {
     /**
      * @return array
@@ -48,10 +50,10 @@ class Extractor implements Resource\Index\ExtractorInterface
     }
 
     /**
-     * @param Resource\File $file
+     * @param  Resource\File  $file
      * @return bool
      */
-    public function canProcess(Resource\File $file)
+    public function canProcess(File $file)
     {
         return true;
     }
@@ -59,11 +61,11 @@ class Extractor implements Resource\Index\ExtractorInterface
     /**
      * Extract metadata of Bynder assets
      *
-     * @param Resource\File $file
-     * @param array $previousExtractedData
+     * @param  Resource\File  $file
+     * @param  array  $previousExtractedData
      * @return array
      */
-    public function extractMetaData(Resource\File $file, array $previousExtractedData = [])
+    public function extractMetaData(File $file, array $previousExtractedData = [])
     {
         $fileInfo = $file->getStorage()->getFileInfoByIdentifier(
             $file->getIdentifier(),
@@ -76,6 +78,7 @@ class Extractor implements Resource\Index\ExtractorInterface
                 'keywords',
             ]
         );
+
         return array_merge($previousExtractedData, $fileInfo);
     }
 }

@@ -57,7 +57,7 @@ class DataHandlerHook
 
         // Try to find the file
         try {
-            $file = ResourceFactory::getInstance()->getFileObject($record['uid_local']);
+            $file = GeneralUtility::makeInstance(ResourceFactory::class)->getFileObject($record['uid_local']);
         } catch (FileDoesNotExistException $e) {
             return;
         } catch (\InvalidArgumentException $e) {
@@ -99,7 +99,7 @@ class DataHandlerHook
 
         // Try to find the file
         try {
-            $file = ResourceFactory::getInstance()->getFileObject($record['uid_local']);
+            $file = GeneralUtility::makeInstance(ResourceFactory::class)->getFileObject($record['uid_local']);
         } catch (FileDoesNotExistException $e) {
             return;
         } catch (\InvalidArgumentException $e) {

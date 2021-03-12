@@ -10,14 +10,14 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'distribution',
     'version' => '0.0.3-dev',
     'state' => 'beta',
-    'clearcacheonload' => 1,
+    'clearCacheOnLoad' => true,
     'author' => 'Frans Saris - Beech.it',
     'author_email' => 't3ext@beech.it',
     'constraints' => [
         'depends' => [
-            'typo3' => '>= 8.7.13 || >=9.5.20 || >= 10.4.13'
+            'typo3' => '>= 10.4.13',
         ],
         'conflicts' => [],
         'suggests' => [],
-    ]
+    ],
 ];

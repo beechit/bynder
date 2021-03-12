@@ -8,93 +8,58 @@ namespace BeechIt\Bynder\Controller;
  * All code (c) Beech.it all rights reserved
  */
 
+use BeechIt\Bynder\Service\BynderService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use BeechIt\Bynder\Service\BynderService;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Resource\Index\Indexer;
-use TYPO3\CMS\Core\Resource\ResourceStorage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\View\StandaloneView;
+use TYPO3\CMS\Core\Resource\ResourceStorageInterface;
+use TYPO3Fluid\Fluid\View\ViewInterface;
 
-/**
- * Class CompactViewController
- */
 class CompactViewController
 {
-    /**
-     * Fluid Standalone View
-     *
-     * @var StandaloneView
-     */
+    /** @var \TYPO3Fluid\Fluid\View\ViewInterface */
     protected $view;
 
-    /**
-     * TemplateRootPath
-     *
-     * @var string[]
-     */
-    protected $templateRootPaths = ['EXT:bynder/Resources/Private/Templates/CompactView'];
-
-    /**
-     * PartialRootPath
-     *
-     * @var string[]
-     */
-    protected $partialRootPaths = ['EXT:bynder/Resources/Private/Partials/CompactView'];
-
-    /**
-     * LayoutRootPath
-     *
-     * @var string[]
-     */
-    protected $layoutRootPaths = ['EXT:bynder/Resources/Private/Layouts/CompactView'];
-
-    /**
-     * @var BynderService
-     */
+    /** @var \BeechIt\Bynder\Service\BynderService */
     protected $bynderService;
 
-    public function __construct()
-    {
-        $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-
-        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
-        $this->view->setPartialRootPaths($this->partialRootPaths);
-        $this->view->setTemplateRootPaths($this->templateRootPaths);
-        $this->view->setLayoutRootPaths($this->layoutRootPaths);
+    public function __construct(
+        ResourceStorageInterface $bynderStorage,
+        BynderService $bynderService,
+        Indexer $indexer,
+        ViewInterface $view
+    ) {
+        $this->bynderStorage = $bynderStorage;
+        $this->bynderService = $bynderService;
+        $this->indexer = $indexer;
+        $this->view = $view;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
-     */
-    public function indexAction(ServerRequestInterface $request, ResponseInterface $response)
+    public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
         $this->view->setTemplate('Index');
 
         $this->view->assignMultiple([
-            'language' => $this->getBackendUserAuthentication()->uc['lang'] ?: ($this->getBackendUserAuthentication()->user['lang'] ?: 'en_EN'),
+            'language' => $this->getBackendLanguage(),
             'apiBaseUrl' => $this->bynderService->getApiBaseUrl(),
             'element' => $request->getQueryParams()['element'],
         ]);
 
-        $response->getBody()->write($this->view->render());
-
-        return $response;
+        return new HtmlResponse($this->view->render());
     }
 
-    public function getFilesAction(ServerRequestInterface $request, ResponseInterface $response)
+    public function getFilesAction(ServerRequestInterface $request): ResponseInterface
     {
+        // @todo verify oauth key/token and return message
         $files = [];
         $error = '';
-        $fileStorage = $this->getBynderStorage();
         foreach ($request->getParsedBody()['files'] ?? [] as $fileIdentifier) {
-            $file = $fileStorage->getFile($fileIdentifier);
+            $file = $this->bynderStorage->getFile($fileIdentifier);
             if ($file) {
                 // (Re)Fetch metadata
-                $this->getIndexer($file->getStorage())->extractMetaData($file);
+                $this->indexer->extractMetaData($file);
                 $files[] = $file->getUid();
             }
         }
@@ -103,38 +68,21 @@ class CompactViewController
             $error = 'No files given/found';
         }
 
-        $response->getBody()->write(json_encode(['files' => $files, 'error' => $error]));
-        return $response;
+        return new JsonResponse(['files' => $files, 'error' => $error]);
     }
 
-    protected function getBynderStorage(): ResourceStorage
+    protected function getBackendLanguage(): string
     {
-        /** @var ResourceStorage $fileStorage */
-        foreach ($this->getBackendUserAuthentication()->getFileStorages() as $fileStorage) {
-            if ($fileStorage->getDriverType() === 'bynder') {
-                return $fileStorage;
-            }
+        $backendUserAuthentication = $GLOBALS['BE_USER'];
+
+        if ($backendUserAuthentication->uc['lang']) {
+            return $backendUserAuthentication->uc['lang'];
         }
 
-        throw new \InvalidArgumentException('Missing Bynder file storage');
-    }
+        if ($backendUserAuthentication->user['lang']) {
+            return $backendUserAuthentication->user['lang'];
+        }
 
-    /**
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUserAuthentication()
-    {
-        return $GLOBALS['BE_USER'];
-    }
-
-    /**
-     * Gets the Indexer.
-     *
-     * @param ResourceStorage $storage
-     * @return Indexer
-     */
-    protected function getIndexer(ResourceStorage $storage)
-    {
-        return GeneralUtility::makeInstance(Indexer::class, $storage);
+        return 'en_EN';
     }
 }

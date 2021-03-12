@@ -1,4 +1,5 @@
 <?php
+
 defined('TYPO3_MODE') || die('Access denied.');
 
 // Register inlineController override to add the Bynder button
@@ -18,7 +19,7 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['registeredDrivers']['bynder'] = [
     'class' => \BeechIt\Bynder\Resource\BynderDriver::class,
     'label' => 'Bynder',
     // @todo: is currently needed to not break the backend. Needs to be fixed in TYPO3
-    'flexFormDS' => 'FILE:EXT:bynder/Configuration/FlexForms/BynderDriverFlexForm.xml'
+    'flexFormDS' => 'FILE:EXT:bynder/Configuration/FlexForms/BynderDriverFlexForm.xml',
 ];
 
 // Register slot to use Bynder API for processed file
