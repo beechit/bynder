@@ -68,7 +68,7 @@ $extractorRegistry = \TYPO3\CMS\Core\Resource\Index\ExtractorRegistry::getInstan
 $extractorRegistry->registerExtractionService(\BeechIt\Bynder\Metadata\Extractor::class);
 unset($extractorRegistry);
 
-if (!\TYPO3\CMS\Core\Core\Bootstrap::usesComposerClassLoading()) {
+if (!(defined('TYPO3_COMPOSER_MODE') && TYPO3_COMPOSER_MODE)) {
     require_once(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('bynder')
         . 'Resources/Private/PHP/autoload.php');
 }
