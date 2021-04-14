@@ -3,7 +3,6 @@
 
 <f:cache.static>
     <div id="bynder-compactview"
-         data-element=".{element}"
          data-language="{language}"
          data-button="Pick a file from Bynder"
          data-folder="bynder-compactview"
@@ -19,17 +18,17 @@
 
 <script src="https://d8ejoa1fys2rk.cloudfront.net/5.0.5/modules/compactview/bynder-compactview-2-latest.js"></script>
 
-
 <div id="importedAssets"></div>
 <script>
-    var container = document.getElementById('bynder-compactview');
+    var container = document.getElementById('bynder-compactview');  
+    var element = ".{element}";
     BynderCompactView.open({
         onSuccess: function (selectedAssets) {
             var media = [];
             for (var i = 0; i < selectedAssets.length; i++) {
                 media.push(selectedAssets[i].databaseId);
             }
-            var details = {media: media, 'element': container.getAttribute('data-element')},
+            var details = {media: media, 'element': element},
                 parentDocument = parent.document,
                 contentIframe = parent.document.getElementById('typo3-contentIframe');
 
