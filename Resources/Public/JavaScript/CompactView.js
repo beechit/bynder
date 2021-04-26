@@ -1,4 +1,3 @@
-
 /**
  * Module: BeechIt/Bynder/CompactView
  *
@@ -7,18 +6,17 @@
 define(['jquery',
     'nprogress',
     'TYPO3/CMS/Backend/Modal',
-    'TYPO3/CMS/Backend/Severity'
-], function($, NProgress, Modal, Severity) {
+    'TYPO3/CMS/Backend/Severity',
+    'TYPO3/CMS/Backend/Utility/MessageUtility'
+], function ($, NProgress, Modal, Severity, MessageUtilityContainer) {
     'use strict';
 
-
     /**
-     *
      * @param element
      * @constructor
      * @exports BeechIt/Bynder/CompactView
      */
-    var CompactViewPlugin = function(element) {
+    var CompactViewPlugin = function (element) {
         var me = this;
         me.$btn = $(element);
         me.target = me.$btn.data('target-folder');
@@ -27,7 +25,6 @@ define(['jquery',
         me.$modal = null;
 
         /**
-         *
          * @param {Array} media
          */
         me.addMedia = function (media) {
@@ -43,12 +40,14 @@ define(['jquery',
                 },
                 function (data) {
                     if (data.files.length) {
-                        inline.importElementMultiple(
-                            me.irreObjectUid,
-                            'sys_file',
-                            data.files,
-                            'file'
-                        );
+                        $.each(data.files, function (index, uid) {
+                            MessageUtilityContainer.MessageUtility.send({
+                                actionName: "typo3:foreignRelation:insert",
+                                objectGroup: me.irreObjectUid,
+                                table: 'sys_file',
+                                uid: uid,
+                            });
+                        });
                     } else {
                         var $confirm = Modal.confirm(
                             'ERROR',
@@ -73,8 +72,7 @@ define(['jquery',
         /**
          * Open the compact view in a modal
          */
-        me.openModal = function() {
-
+        me.openModal = function () {
             var settings = me.$btn.data();
 
             me.$modal = Modal.advanced({
@@ -88,7 +86,7 @@ define(['jquery',
         };
     };
 
-    $(document).on('click', '.t3js-bynder-compact-view-btn', function(evt) {
+    $(document).on('click', '.t3js-bynder-compact-view-btn', function (evt) {
         evt.preventDefault();
 
         var $this = $(this),

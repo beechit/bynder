@@ -7,10 +7,12 @@ namespace BeechIt\Bynder\Backend;
  * Date: 19-2-18
  * All code (c) Beech.it all rights reserved
  */
+
 use BeechIt\Bynder\Resource\BynderDriver;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class InlineControlContainer
@@ -21,7 +23,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
 {
 
     /**
-     * @param array $inlineConfiguration
+     * @param  array  $inlineConfiguration
      * @return string
      */
     protected function renderPossibleRecordsSelectorTypeGroupDB(array $inlineConfiguration)
@@ -44,7 +46,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
     }
 
     /**
-     * @param array $inlineConfiguration
+     * @param  array  $inlineConfiguration
      * @return string
      */
     protected function renderBynderButton(array $inlineConfiguration): string
@@ -53,6 +55,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
 
         if (!$this->bynderStorageAvailable()) {
             $errorText = htmlspecialchars($languageService->sL('LLL:EXT:bynder/Resources/Private/Language/locallang_be.xlf:compact_view.error-no-storage-access'));
+
             return '&nbsp;<div class="alert alert-danger" style="display: inline-block">
                 ' . $this->iconFactory->getIcon('actions-bynder-compact-view', Icon::SIZE_SMALL)->render() . '
                 ' . $errorText . '
@@ -67,7 +70,8 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
         $objectPrefix = $currentStructureDomObjectIdPrefix . '-' . $foreign_table;
         $nameObject = $currentStructureDomObjectIdPrefix;
 
-        $compactViewUrl = BackendUtility::getModuleUrl('bynder_compact_view', ['element' => 'bynder' . $this->inlineData['config'][$nameObject]['md5']]);
+        $compactViewUrl = GeneralUtility::makeInstance(UriBuilder::class)
+            ->buildUriFromRoute('bynder_compact_view', ['element' => 'bynder' . $this->inlineData['config'][$nameObject]['md5']]);
 
         $this->requireJsModules[] = 'TYPO3/CMS/Bynder/CompactView';
         $buttonText = htmlspecialchars($languageService->sL('LLL:EXT:bynder/Resources/Private/Language/locallang_be.xlf:compact_view.button'));
@@ -103,6 +107,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
                 return true;
             }
         }
+
         return false;
     }
 }

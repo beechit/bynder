@@ -1,4 +1,5 @@
 <?php
+
 defined('TYPO3_MODE') || die('Access denied.');
 
 // Register inlineController override to add the Bynder button
@@ -18,7 +19,7 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['registeredDrivers']['bynder'] = [
     'class' => \BeechIt\Bynder\Resource\BynderDriver::class,
     'label' => 'Bynder',
     // @todo: is currently needed to not break the backend. Needs to be fixed in TYPO3
-    'flexFormDS' => 'FILE:EXT:bynder/Configuration/FlexForms/BynderDriverFlexForm.xml'
+    'flexFormDS' => 'FILE:EXT:bynder/Configuration/FlexForms/BynderDriverFlexForm.xml',
 ];
 
 // Register slot to use Bynder API for processed file
@@ -68,7 +69,7 @@ $extractorRegistry = \TYPO3\CMS\Core\Resource\Index\ExtractorRegistry::getInstan
 $extractorRegistry->registerExtractionService(\BeechIt\Bynder\Metadata\Extractor::class);
 unset($extractorRegistry);
 
-if (!\TYPO3\CMS\Core\Core\Bootstrap::usesComposerClassLoading()) {
+if (!(defined('TYPO3_COMPOSER_MODE') && TYPO3_COMPOSER_MODE)) {
     require_once(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('bynder')
         . 'Resources/Private/PHP/autoload.php');
 }

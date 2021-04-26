@@ -7,11 +7,13 @@ namespace BeechIt\Bynder\Service;
  * Date: 19-2-18
  * All code (c) Beech.it all rights reserved
  */
+
 use BeechIt\Bynder\Exception\InvalidExtensionConfigurationException;
+use BeechIt\Bynder\Utility\ConfigurationUtility;
 use Bynder\Api\BynderApiFactory;
+use GuzzleHttp\Exception\RequestException;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -67,7 +69,7 @@ class BynderService implements SingletonInterface
 
     public function __construct()
     {
-        $extensionConfiguration = \BeechIt\Bynder\Utility\ConfigurationUtility::getExtensionConfiguration();
+        $extensionConfiguration = ConfigurationUtility::getExtensionConfiguration();
 
         $this->apiBaseUrl = $extensionConfiguration['url'] ?? '';
         $this->otfBaseUrl = $extensionConfiguration['otf_base_url'] ?? '';
@@ -93,7 +95,7 @@ class BynderService implements SingletonInterface
                 'consumerSecret' => $this->oAuthConsumerSecret,
                 'token' => $this->oAuthTokenKey,
                 'tokenSecret' => $this->oAuthTokenSecret,
-                'baseUrl' => $this->apiBaseUrl
+                'baseUrl' => $this->apiBaseUrl,
             ]
         );
     }
@@ -147,7 +149,7 @@ class BynderService implements SingletonInterface
     }
 
     /**
-     * @param string $uuid
+     * @param  string  $uuid
      * @return array
      * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
      */
@@ -163,14 +165,18 @@ class BynderService implements SingletonInterface
     }
 
     /**
-     * @param string $uuid
-     * @param string $uri
-     * @param string|null $additionalInfo
-     * @param \DateTime|null $dateTime
+     * @param  string  $uuid
+     * @param  string  $uri
+     * @param  string|null  $additionalInfo
+     * @param  \DateTime|null  $dateTime
      * @return bool
      */
-    public function addAssetUsage(string $uuid, string $uri, string $additionalInfo = null, \DateTime $dateTime = null): bool
-    {
+    public function addAssetUsage(
+        string $uuid,
+        string $uri,
+        string $additionalInfo = null,
+        \DateTime $dateTime = null
+    ): bool {
         try {
             $usage = $this->getBynderApi()->getAssetBankManager()->createUsage([
                 'integration_id' => $this->bynderIntegrationId,
@@ -179,7 +185,7 @@ class BynderService implements SingletonInterface
                 'additional' => $additionalInfo,
                 'timestamp' => ($dateTime ?? new \DateTime())->format('c'),
             ])->wait();
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             $usage = null;
         }
 
@@ -187,8 +193,8 @@ class BynderService implements SingletonInterface
     }
 
     /**
-     * @param string $uuid
-     * @param string $uri
+     * @param  string  $uuid
+     * @param  string  $uri
      * @return bool
      */
     public function deleteAssetUsage(string $uuid, string $uri): bool
@@ -199,13 +205,12 @@ class BynderService implements SingletonInterface
                 'asset_id' => $uuid,
                 'uri' => $uri,
             ])->wait();
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             $response = null;
         }
 
         return $response !== null && $response->getStatusCode() === 204;
     }
-
 
     /**
      * @return FrontendInterface
@@ -216,6 +221,7 @@ class BynderService implements SingletonInterface
         if ($this->cache === null) {
             $this->cache = GeneralUtility::makeInstance(CacheManager::class)->getCache('bynder_api');
         }
+
         return $this->cache;
     }
 }
