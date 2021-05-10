@@ -20,8 +20,8 @@
 
 <div id="importedAssets"></div>
 <script>
-    var container = document.getElementById('bynder-compactview');  
-    var element = ".{element}";
+    var container = document.getElementById('bynder-compactview');
+    var element = '.<f:format.raw>{element}</f:format.raw>';
     BynderCompactView.open({
         onSuccess: function (selectedAssets) {
             var media = [];
