@@ -20,6 +20,14 @@ services:
     arguments:
       $storage: '@storage.bynder'
 
+  client.bynder:
+    class: Bynder\Api\BynderClient
+    factory: '@BeechIt\Bynder\Factory\BynderClientFactory'
+
+  BeechIt\Bynder\Service\BynderService:
+    arguments:
+      $bynderClient: '@client.bynder'
+
   BeechIt\Bynder\Controller\CompactViewController:
     public: true
     arguments:

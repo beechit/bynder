@@ -22,7 +22,7 @@ class InstallSlot
      * Create a new file storage with the BynderDriver
      *
      * @param string $extensionKey
-     * @param InstallUtility $installUtility
+     * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
      */
     public function createBynderFileStorage(string $extensionKey, InstallUtility $installUtility)
     {

@@ -11,17 +11,13 @@ namespace BeechIt\Bynder\Backend;
 use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Imaging\Icon;
-use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Class InlineControlContainer
- *
  * Override core InlineControlContainer to inject Bynder button
  */
 class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineControlContainer
 {
-
     /**
      * @param  array  $inlineConfiguration
      * @return string
@@ -101,7 +97,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
      */
     protected function bynderStorageAvailable(): bool
     {
-        /** @var ResourceStorage $fileStorage */
+        /** @var \TYPO3\CMS\Core\Resource\ResourceStorage $fileStorage */
         foreach ($this->getBackendUserAuthentication()->getFileStorages() as $fileStorage) {
             if ($fileStorage->getDriverType() === BynderDriver::KEY) {
                 return true;

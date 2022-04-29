@@ -2,55 +2,49 @@
 
 namespace BeechIt\Bynder\Utility;
 
+use BeechIt\Bynder\Exception\InvalidExtensionConfigurationException;
+use GuzzleHttp\HandlerStack;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility as CoreConfigurationUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
  * Utility: Configuration
- * @package BeechIt\Bynder\Utility
  */
 class ConfigurationUtility
 {
     const EXTENSION = 'bynder';
 
+    /** @var array */
+    private static $configuration;
+
     /**
      * @return array
      */
-    public static function getExtensionConfiguration(): array
+    protected static function getExtensionConfiguration(): array
     {
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-        if (class_exists(CoreConfigurationUtility::class)) {
-            $configuration = $objectManager->get(CoreConfigurationUtility::class)->getCurrentConfiguration('bynder');
-            $extensionConfiguration = [];
-            foreach ($configuration as $key => $value) {
-                $extensionConfiguration[$key] = $value['value'];
+        if (!self::$configuration) {
+            try {
+                $configuration = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(self::EXTENSION);
+            } catch (Exception $e) {
             }
-        } else {
-            $extensionConfiguration = $objectManager->get(ExtensionConfiguration::class)->get('bynder');
+
+            self::$configuration = $configuration ?: [];
         }
 
-        if (isset($extensionConfiguration['url'])) {
-            $extensionConfiguration['url'] = static::cleanUrl($extensionConfiguration['url']);
-        }
-        $extensionConfiguration['otf_base_url'] = $extensionConfiguration['otf_base_url'] ??  $extensionConfiguration['otfBaseUrl'] ?? null;
-        if (isset($extensionConfiguration['otf_base_url'])) {
-            $extensionConfiguration['otf_base_url'] = static::cleanUrl($extensionConfiguration['otf_base_url']);
-        }
-        return $extensionConfiguration;
+        return self::$configuration;
     }
 
     /**
-     * Clean url
-     *
-     * When url given, make sure url is a valid url
-     *
-     * @param string $url
      * @return string
+     * @throws \BeechIt\Bynder\Exception\InvalidExtensionConfigurationException
      */
-    public static function cleanUrl(string $url): string
+    public static function getDomain(): string
     {
+        $url = self::getExtensionConfiguration()['url'] ?? '';
+
         if ($url === '') {
             return $url;
         }
@@ -67,6 +61,58 @@ class ConfigurationUtility
             $url = rtrim($url, '/') . '/';
         }
 
-        return $url;
+        $domain = parse_url($url, PHP_URL_HOST) ?: '';
+        if (empty($domain)) {
+            throw new InvalidExtensionConfigurationException('Make sure Bynder domain is configured in extension manager', 1651241069);
+        }
+
+        return $domain;
+    }
+
+    /**
+     * @return string
+     * @throws \BeechIt\Bynder\Exception\InvalidExtensionConfigurationException
+     */
+    public static function getPermanentToken(): string
+    {
+        $token = self::getExtensionConfiguration()['permanent_token'] ?? '';
+
+        if (empty($token)) {
+            throw new InvalidExtensionConfigurationException('Make sure Bynder permanent token is configured in extension manager', 1651241125);
+        }
+
+        return $token;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getHTTPRequestOptions(): array
+    {
+        $httpOptions = $GLOBALS['TYPO3_CONF_VARS']['HTTP'] ?? [];
+        $httpOptions['verify'] = filter_var($httpOptions['verify'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $httpOptions['verify'];
+
+        if (isset($httpOptions['handler']) && is_array($httpOptions['handler'])) {
+            $stack = HandlerStack::create();
+            foreach ($httpOptions['handler'] ?? [] as $handler) {
+                $stack->push($handler);
+            }
+            $httpOptions['handler'] = $stack;
+        }
+
+        return $httpOptions;
+    }
+
+    /**
+     * @param  bool  $relativeToCurrentScript
+     * @return string
+     */
+    public static function getUnavailableImage(bool $relativeToCurrentScript = false): string
+    {
+        $path = GeneralUtility::getFileAbsFileName(
+            self::getExtensionConfiguration()['image_unavailable'] ?: 'EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg'
+        );
+
+        return ($relativeToCurrentScript) ? PathUtility::getAbsoluteWebPath($path) : str_replace(Environment::getPublicPath() . '/', '', $path);
     }
 }

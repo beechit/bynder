@@ -10,8 +10,6 @@ namespace BeechIt\Bynder\Backend;
 use BeechIt\Bynder\Resource\BynderDriver;
 
 /**
- * Class ImageManipulationElement
- *
  * Override of ImageManipulationElement to hide cropper for Bynder files
  */
 class ImageManipulationElement extends \TYPO3\CMS\Backend\Form\Element\ImageManipulationElement

@@ -9,7 +9,6 @@ namespace BeechIt\Bynder\Resource;
  */
 use BeechIt\Bynder\Service\BynderService;
 use GuzzleHttp\Exception\ClientException;
-use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
@@ -17,14 +16,9 @@ use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
 use TYPO3\CMS\Core\Resource\Service\FileProcessingService;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
- * Class AssetProcessing
- *
  * Create/fetch CDN urls for scaled/cropped Bynder assets
- *
- * @package BeechIt\Bynder\Resource
  */
 class AssetProcessing implements SingletonInterface
 {
@@ -35,13 +29,11 @@ class AssetProcessing implements SingletonInterface
      */
     protected static $lastRequestedOtfAsset;
 
-    /**
-     * @var BynderService
-     */
+    /** @var \BeechIt\Bynder\Service\BynderService */
     protected $bynderService;
 
     /**
-     * @param ProcessedFile $processedFile
+     * @param \TYPO3\CMS\Core\Resource\ProcessedFile $processedFile
      * @return bool
      */
     protected function needsReprocessing($processedFile): bool
@@ -54,10 +46,10 @@ class AssetProcessing implements SingletonInterface
     /**
      * Create url for scalled/cropped versions of Bynder assets
      *
-     * @param FileProcessingService $fileProcessingService
-     * @param DriverInterface $driver
-     * @param ProcessedFile $processedFile
-     * @param File $file
+     * @param \TYPO3\CMS\Core\Resource\Service\FileProcessingService $fileProcessingService
+     * @param \TYPO3\CMS\Core\Resource\Driver\DriverInterface $driver
+     * @param \TYPO3\CMS\Core\Resource\ProcessedFile $processedFile
+     * @param \TYPO3\CMS\Core\Resource\File $file
      * @param $taskType
      * @param array $configuration
      * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
@@ -81,7 +73,7 @@ class AssetProcessing implements SingletonInterface
                     'thul' => '',
                     'webimage' => '',
                     'mini' => '',
-                ]
+                ],
             ];
         }
 
@@ -187,7 +179,7 @@ class AssetProcessing implements SingletonInterface
                 'url' => $otfBaseUrl . '?' . http_build_query([
                         'w' => $width ?: '',
                         'h' => $height ?: '',
-                        'crop' => $crop ? 'true' : 'false'
+                        'crop' => $crop ? 'true' : 'false',
                     ]),
             ];
         }
@@ -241,7 +233,7 @@ class AssetProcessing implements SingletonInterface
     }
 
     /**
-     * @return BynderService
+     * @return \BeechIt\Bynder\Service\BynderService
      * @throws \InvalidArgumentException
      */
     protected function getBynderService(): BynderService

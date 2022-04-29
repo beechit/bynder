@@ -12,7 +12,7 @@ The extension will allow the authorised users to:
 ### Requirements
 
 1) You are a customer of Bynder https://www.bynder.com/trial/
-2) You have API access (tokens) https://domain.getbynder.com/pysettings#api
+2) You have API access (permanent tokens) https://domain.getbynder.com/pysettings/permanent-tokens/
 
 
 ### Installation
@@ -27,16 +27,11 @@ Next got the the extension configuration of EXT:bynder and fill in the needed ur
 #### Available Configuration
 
 | Key               | Description                                                                                      | Required | Default                                                |
-| ----------------: | ------------------------------------------------------------------------------------------------ | :------: | ------------------------------------------------------ |
-| url               | Bynder Url (example: domain.bynder.com)                                                          | Yes      |                                                        |
-| otf_base_url      | OnTheFly derivative's Url (1)                                                                    | *No*     |                                                        |
-| consumer_key      | Bynder OAuth consumer key                                                                        | Yes      |                                                        |
-| consumer_secret   | Bynder OAuth consumer secret                                                                     | Yes      |                                                        |
-| token_key         | Bynder OAuth token key                                                                           | Yes      |                                                        |
-| token_secret      | Bynder OAuth token secret                                                                        | Yes      |                                                        |
-| image_unavailable | Displayed image when file is not retrievable like when the file status is deleted or unpublished | *No*     | EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg |
+| ----------------: |--------------------------------------------------------------------------------------------------|:--------:| ------------------------------------------------------ |
+| url               | Bynder Url (example: domain.bynder.com)                                                          |   Yes    |                                                        |
+| permanent_token   | Bynder API: Permanent token                                                                      |   Yes    |                                                        |
+| image_unavailable | Displayed image when file is not retrievable like when the file status is deleted or unpublished |   *No*   | EXT:bynder/Resources/Public/Icons/ImageUnavailable.svg |
 
-(1) See: https://help.bynder.com/Modules/Asset-Bank/Modify-public-derivatives-on-the-fly.htm?Highlight=on-the-fly#prereq
 
 ### How to contribute
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace BeechIt\Bynder\Resource;
@@ -12,27 +13,21 @@ namespace BeechIt\Bynder\Resource;
 use BeechIt\Bynder\Exception\NotImplementedException;
 use BeechIt\Bynder\Service\BynderService;
 use Bynder\Api\Impl\AssetBankManager;
+use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
-use TYPO3\CMS\Core\Resource\Exception;
 use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Class BynderDriver
- */
 class BynderDriver implements DriverInterface
 {
     const KEY = 'bynder';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected static $tempFiles = [];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $rootFolder = '';
 
     /**
@@ -56,14 +51,10 @@ class BynderDriver implements DriverInterface
      */
     protected $configuration = [];
 
-    /**
-     * @var AssetBankManager
-     */
+    /** @var \Bynder\Api\Impl\AssetBankManager */
     protected $assetBankManager;
 
-    /**
-     * @var BynderService
-     */
+    /** @var \BeechIt\Bynder\Service\BynderService */
     protected $bynderService;
 
     /**
@@ -207,7 +198,7 @@ class BynderDriver implements DriverInterface
      *
      * @param  string  $identifier
      * @return string
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     public function getPublicUrl($identifier)
     {
@@ -236,17 +227,17 @@ class BynderDriver implements DriverInterface
 
     public function createFolder($newFolderName, $parentFolderIdentifier = '', $recursive = false)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045381);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045381);
     }
 
     public function renameFolder($folderIdentifier, $newName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045382);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045382);
     }
 
     public function deleteFolder($folderIdentifier, $deleteRecursively = false)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045383);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045383);
     }
 
     /**
@@ -255,6 +246,10 @@ class BynderDriver implements DriverInterface
      */
     public function fileExists($fileIdentifier)
     {
+        if (empty($fileIdentifier)) {
+            return false;
+        }
+
         // We just assume that the processed file exists as this is just a CDN link
         if ($this->isProcessedFile($fileIdentifier)) {
             return true;
@@ -297,22 +292,22 @@ class BynderDriver implements DriverInterface
      * @param  string  $newFileName
      * @param  bool  $removeOriginal
      * @return string|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function addFile($localFilePath, $targetFolderIdentifier, $newFileName = '', $removeOriginal = true)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045386);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045386);
     }
 
     /**
      * @param  string  $fileName
      * @param  string  $parentFolderIdentifier
      * @return string|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function createFile($fileName, $parentFolderIdentifier)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045387);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045387);
     }
 
     /**
@@ -320,39 +315,39 @@ class BynderDriver implements DriverInterface
      * @param  string  $targetFolderIdentifier
      * @param  string  $fileName
      * @return string|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function copyFileWithinStorage($fileIdentifier, $targetFolderIdentifier, $fileName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045388);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045388);
     }
 
     /**
      * @param  string  $fileIdentifier
      * @param  string  $newName
      * @return string|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function renameFile($fileIdentifier, $newName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045389);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045389);
     }
 
     /**
      * @param  string  $fileIdentifier
      * @param  string  $localFilePath
      * @return bool|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function replaceFile($fileIdentifier, $localFilePath)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045390);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045390);
     }
 
     /**
      * @param  string  $fileIdentifier
      * @return bool
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function deleteFile($fileIdentifier)
     {
@@ -361,7 +356,7 @@ class BynderDriver implements DriverInterface
         if ($this->isProcessedFile($fileIdentifier)) {
             return true;
         }
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045391);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045391);
     }
 
     /**
@@ -395,11 +390,11 @@ class BynderDriver implements DriverInterface
      * @param  string  $targetFolderIdentifier
      * @param  string  $newFileName
      * @return string|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function moveFileWithinStorage($fileIdentifier, $targetFolderIdentifier, $newFileName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045392);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045392);
     }
 
     /**
@@ -407,11 +402,11 @@ class BynderDriver implements DriverInterface
      * @param  string  $targetFolderIdentifier
      * @param  string  $newFolderName
      * @return array|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function moveFolderWithinStorage($sourceFolderIdentifier, $targetFolderIdentifier, $newFolderName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045393);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045393);
     }
 
     /**
@@ -419,17 +414,17 @@ class BynderDriver implements DriverInterface
      * @param  string  $targetFolderIdentifier
      * @param  string  $newFolderName
      * @return bool|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function copyFolderWithinStorage($sourceFolderIdentifier, $targetFolderIdentifier, $newFolderName)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045394);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045394);
     }
 
     /**
      * @param  string  $fileIdentifier
      * @return string
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     public function getFileContents($fileIdentifier)
     {
@@ -450,11 +445,11 @@ class BynderDriver implements DriverInterface
      * @param  string  $fileIdentifier
      * @param  string  $contents
      * @return int|void
-     * @throws NotImplementedException
+     * @throws \BeechIt\Bynder\Exception\NotImplementedException
      */
     public function setFileContents($fileIdentifier, $contents)
     {
-        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', __CLASS__, __METHOD__), 1519045395);
+        throw new NotImplementedException(sprintf('Method %s::%s() is not implemented', self::class, __METHOD__), 1519045395);
     }
 
     /**
@@ -506,13 +501,13 @@ class BynderDriver implements DriverInterface
      * buffer before. Will be taken care of by the Storage.
      *
      * @param  string  $identifier
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     public function dumpFileContents($identifier)
     {
         try {
             $downloadLocation = $this->getAssetBankManager()->getMediaDownloadLocation($identifier)->wait();
-            readfile($downloadLocation['s3_file'], 0);
+            readfile($downloadLocation['s3_file'], false);
         } catch (\Exception $exception) {
             throw new FileDoesNotExistException(
                 sprintf('Requested file "%s" coudn\'t be found', $identifier),
@@ -540,7 +535,7 @@ class BynderDriver implements DriverInterface
      * @param  string  $fileIdentifier
      * @param  array  $propertiesToExtract
      * @return array
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     public function getFileInfoByIdentifier($fileIdentifier, array $propertiesToExtract = [])
     {
@@ -605,6 +600,18 @@ class BynderDriver implements DriverInterface
         $sort = '',
         $sortRev = false
     ) {
+        if ($folderIdentifier === $this->rootFolder) {
+            $message = GeneralUtility::makeInstance(FlashMessage::class,
+                'As these files are handled by Bynder, you are not able to see the files.',
+                'Bynder media not browsable',
+                FlashMessage::ERROR
+            );
+
+            $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
+            $messageQueue = $flashMessageService->getMessageQueueByIdentifier();
+            $messageQueue->addMessage($message);
+        }
+
         return [];
     }
 
@@ -672,14 +679,14 @@ class BynderDriver implements DriverInterface
     }
 
     /**
-     * @return AssetBankManager
+     * @return \Bynder\Api\Impl\AssetBankManager
      * @throws \InvalidArgumentException
      */
     protected function getAssetBankManager(): AssetBankManager
     {
         if ($this->assetBankManager === null) {
             $this->assetBankManager = $this->getBynderService()
-                ->getBynderApi()
+                ->getBynderClient()
                 ->getAssetBankManager();
         }
 
@@ -687,7 +694,7 @@ class BynderDriver implements DriverInterface
     }
 
     /**
-     * @return BynderService
+     * @return \BeechIt\Bynder\Service\BynderService
      * @throws \InvalidArgumentException
      */
     protected function getBynderService(): BynderService
@@ -736,7 +743,6 @@ class BynderDriver implements DriverInterface
      *
      * @param  array  $mediaInfo
      * @param  string  $property
-     *
      * @return bool|int|string
      * @throws \InvalidArgumentException
      */
@@ -791,7 +797,7 @@ class BynderDriver implements DriverInterface
      * @param  string  $fileIdentifier
      * @return string The temporary path
      * @throws \RuntimeException
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     protected function saveFileToTemporaryPath($fileIdentifier): string
     {
@@ -812,7 +818,7 @@ class BynderDriver implements DriverInterface
      *
      * @param  string  $fileIdentifier
      * @return string
-     * @throws Exception\FileDoesNotExistException
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     protected function getTemporaryPathForFile($fileIdentifier): string
     {
