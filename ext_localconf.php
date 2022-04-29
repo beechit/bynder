@@ -22,28 +22,6 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['registeredDrivers']['bynder'] = [
     'flexFormDS' => 'FILE:EXT:bynder/Configuration/FlexForms/BynderDriverFlexForm.xml',
 ];
 
-// Register slot to use Bynder API for processed file
-$signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
-$signalSlotDispatcher->connect(
-    TYPO3\CMS\Core\Resource\ResourceStorage::class,
-    \TYPO3\CMS\Core\Resource\Service\FileProcessingService::SIGNAL_PreFileProcess,
-    \BeechIt\Bynder\Resource\AssetProcessing::class,
-    'processFile'
-);
-$signalSlotDispatcher->connect(
-    \TYPO3\CMS\Core\Resource\ResourceStorage::class,
-    \TYPO3\CMS\Core\Resource\ResourceStorage::SIGNAL_PreGeneratePublicUrl,
-    \BeechIt\Bynder\Slot\PublicUrlSlot::class,
-    'getPublicUrl'
-);
-$signalSlotDispatcher->connect(
-    \TYPO3\CMS\Extensionmanager\Utility\InstallUtility::class,
-    'afterExtensionInstall',
-    \BeechIt\Bynder\Slot\InstallSlot::class,
-    'createBynderFileStorage'
-);
-unset($signalSlotDispatcher);
-
 // Register hooks to post/delete usage registration
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] =
     \BeechIt\Bynder\Hook\DataHandlerHook::class;

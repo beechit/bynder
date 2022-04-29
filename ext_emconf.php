@@ -4,7 +4,7 @@
 # Extension Manager/Repository config file for ext "bynder".
 ########################################################################
 
-$EM_CONF[$_EXTKEY] = [
+$EM_CONF['bynder'] = [
     'title' => 'Bynder integration for TYPO3',
     'description' => 'Integrate the Bynder DAM into TYPO3',
     'category' => 'distribution',

@@ -34,3 +34,21 @@ services:
       $bynderStorage: '@storage.bynder'
       $view: '@fluid_view.bynder'
       $indexer: '@indexer.bynder_storage'
+
+  BeechIt\Bynder\EventListener\PersistBynderFileStorage:
+    tags:
+      - name: event.listener
+        identifier: 'bynder::persistStorage'
+        event: TYPO3\CMS\Core\Package\Event\AfterPackageActivationEvent
+
+  BeechIt\Bynder\EventListener\ProcessBynderAsset:
+    tags:
+      - name: event.listener
+        identifier: 'bynder::processAsset'
+        event: TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent
+
+  BeechIt\Bynder\EventListener\PublicBynderUrl:
+    tags:
+      - name: event.listener
+        identifier: 'bynder::publicUrl'
+        event: TYPO3\CMS\Core\Resource\Event\GeneratePublicUrlForResourceEvent

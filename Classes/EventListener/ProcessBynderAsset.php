@@ -1,72 +1,44 @@
 <?php
 
-namespace BeechIt\Bynder\Resource;
+namespace BeechIt\Bynder\EventListener;
 
-/*
- * This source file is proprietary property of Beech.it
- * Date: 21-2-18
- * All code (c) Beech.it all rights reserved
- */
-
+use BeechIt\Bynder\Resource\BynderDriver;
 use BeechIt\Bynder\Service\BynderService;
 use GuzzleHttp\Exception\ClientException;
-use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
-use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
-use TYPO3\CMS\Core\Resource\Service\FileProcessingService;
-use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Create/fetch CDN urls for scaled/cropped Bynder assets
- */
-class AssetProcessing implements SingletonInterface
+class ProcessBynderAsset
 {
-
-    /** @var \BeechIt\Bynder\Service\BynderService */
-    protected $bynderService;
+    /** @var \BeechIt\Bynder\Service\BynderService  */
+    private $bynderService;
 
     /**
-     * @param  \TYPO3\CMS\Core\Resource\ProcessedFile  $processedFile
-     * @return bool
+     * @param  \BeechIt\Bynder\Service\BynderService  $bynderService
      */
-    protected function needsReprocessing($processedFile): bool
+    public function __construct(BynderService $bynderService)
     {
-        return $processedFile->isNew()
-            || (!$processedFile->usesOriginalFile() && !$processedFile->exists())
-            || $processedFile->isOutdated();
+        $this->bynderService = $bynderService;
     }
 
     /**
-     * Create url for scalled/cropped versions of Bynder assets
-     *
-     * @param  \TYPO3\CMS\Core\Resource\Service\FileProcessingService  $fileProcessingService
-     * @param  \TYPO3\CMS\Core\Resource\Driver\DriverInterface  $driver
-     * @param  \TYPO3\CMS\Core\Resource\ProcessedFile  $processedFile
-     * @param  \TYPO3\CMS\Core\Resource\File  $file
-     * @param $taskType
-     * @param  array  $configuration
-     * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
+     * @param  \TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent  $event
+     * @return void
      */
-    public function processFile(
-        FileProcessingService $fileProcessingService,
-        DriverInterface $driver,
-        ProcessedFile $processedFile,
-        File $file,
-        $taskType,
-        array $configuration
-    ) {
+    public function __invoke(\TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent $event)
+    {
+        $file = $event->getFile();
         if ($file->getStorage()->getDriverType() !== BynderDriver::KEY) {
             return;
         }
 
+        $processedFile = $event->getProcessedFile();
         if (!$this->needsReprocessing($processedFile)) {
             return;
         }
-
         try {
-            $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+            $mediaInfo = $this->bynderService->getMediaInfo($file->getIdentifier());
         } catch (ClientException $e) {
             $mediaInfo = [
                 'isPublic' => false,
@@ -78,9 +50,9 @@ class AssetProcessing implements SingletonInterface
             ];
         }
 
-        $processingConfiguration = $configuration;
+        $processingConfiguration = $event->getConfiguration();
         // The CONTEXT_IMAGEPREVIEW task only gives max dimensions
-        if ($taskType === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
+        if ($event->getTaskType() === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
             if (!empty($processingConfiguration['width'])) {
                 $processingConfiguration['width'] .= 'm';
             }
@@ -91,8 +63,8 @@ class AssetProcessing implements SingletonInterface
 
         $fileInfo = $this->getThumbnailInfo(
             $processingConfiguration,
-            (int)$processedFile->getOriginalFile()->getProperty('width'),
-            (int)$processedFile->getOriginalFile()->getProperty('height'),
+            (int)$file->getProperty('width'),
+            (int)$file->getProperty('height'),
             $mediaInfo['thumbnails']
         );
 
@@ -112,6 +84,19 @@ class AssetProcessing implements SingletonInterface
         // Persist processed file like done in FileProcessingService::process()
         $processedFileRepository = GeneralUtility::makeInstance(ProcessedFileRepository::class);
         $processedFileRepository->add($processedFile);
+
+        $event->setProcessedFile($processedFile);
+    }
+
+    /**
+     * @param  \TYPO3\CMS\Core\Resource\ProcessedFile  $processedFile
+     * @return bool
+     */
+    protected function needsReprocessing(ProcessedFile $processedFile): bool
+    {
+        return $processedFile->isNew()
+            || (!$processedFile->usesOriginalFile() && !$processedFile->exists())
+            || $processedFile->isOutdated();
     }
 
     /**
@@ -205,18 +190,5 @@ class AssetProcessing implements SingletonInterface
         }
 
         return (int)($orgB / ($orgA / $newA));
-    }
-
-    /**
-     * @return \BeechIt\Bynder\Service\BynderService
-     * @throws \InvalidArgumentException
-     */
-    protected function getBynderService(): BynderService
-    {
-        if ($this->bynderService === null) {
-            $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-        }
-
-        return $this->bynderService;
     }
 }

@@ -1,46 +1,52 @@
 <?php
 
-namespace BeechIt\Bynder\Slot;
+namespace BeechIt\Bynder\EventListener;
 
-/*
- * This source file is proprietary property of Beech.it
- * Date: 27-2-18
- * All code (c) Beech.it all rights reserved
- */
 use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Package\Event\AfterPackageActivationEvent;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extensionmanager\Utility\InstallUtility;
 
-/**
- * Create need file storage and file mount after install
- */
-class InstallSlot
+class PersistBynderFileStorage
 {
-    /**
-     * Create a new file storage with the BynderDriver
-     *
-     * @param string $extensionKey
-     * @param \TYPO3\CMS\Extensionmanager\Utility\InstallUtility $installUtility
-     */
-    public function createBynderFileStorage(string $extensionKey, InstallUtility $installUtility)
+    private $executionTime;
+    private $storageRepository;
+
+    public function __construct(StorageRepository $storageRepository)
     {
-        if ($extensionKey !== 'bynder') {
+        $this->executionTime = $GLOBALS['EXEC_TIME'] ?? time();
+        $this->storageRepository = $storageRepository;
+    }
+
+    /**
+     * @param  \TYPO3\CMS\Core\Package\Event\AfterPackageActivationEvent  $event
+     * @return void
+     */
+    public function __invoke(AfterPackageActivationEvent $event)
+    {
+        if ($event->getPackageKey() !== 'bynder') {
             return;
         }
 
         /** @var $storageRepository StorageRepository */
-        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        if ($storageRepository->findByStorageType(BynderDriver::KEY) !== []) {
+        if ($this->storageRepository->findByStorageType(BynderDriver::KEY) !== []) {
             return;
         }
+    }
+
+    /**
+     * @return void
+     */
+    private function createBynderStorage(): void
+    {
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
 
         // Create Bynder storage
         $field_values = [
             'pid' => 0,
-            'tstamp' => $GLOBALS['EXEC_TIME'],
-            'crdate' => $GLOBALS['EXEC_TIME'],
+            'tstamp' => $this->executionTime,
+            'crdate' => $this->executionTime,
             'name' => 'Bynder',
             'description' => 'Automatically created during the installation of EXT:bynder',
             'driver' => BynderDriver::KEY,
@@ -50,27 +56,25 @@ class InstallSlot
             'is_public' => 1,
             'is_writable' => 0,
             'is_default' => 0,
-             // We use the processed file folder of the default storage as fallback
+            // We use the processed file folder of the default storage as fallback
             'processingfolder' => '1:/_processed_/',
         ];
 
-        $dbConnection = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionForTable('sys_file_storage');
+        $dbConnection = $connectionPool->getConnectionForTable('sys_file_storage');
         $dbConnection->insert('sys_file_storage', $field_values);
         $storageUid = (int)$dbConnection->lastInsertId('sys_file_storage');
 
         // Create file mount (for the editors)
         $field_values = [
             'pid' => 0,
-            'tstamp' => $GLOBALS['EXEC_TIME'],
+            'tstamp' => $this->executionTime,
             'title' => 'Bynder',
             'description' => 'Automatically created during the installation of EXT:bynder',
             'path' => '',
             'base' => $storageUid,
         ];
 
-        $dbConnection = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionForTable('sys_filemounts');
+        $dbConnection = $connectionPool->getConnectionForTable('sys_filemounts');
         $dbConnection->insert('sys_filemounts', $field_values);
     }
 }
