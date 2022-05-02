@@ -29,9 +29,10 @@ class ConfigurationUtility
             try {
                 $configuration = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(self::EXTENSION);
             } catch (Exception $e) {
+                $configuration = [];
             }
 
-            self::$configuration = $configuration ?: [];
+            self::$configuration = $configuration;
         }
 
         return self::$configuration;
