@@ -10,7 +10,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class PersistBynderFileStorage
 {
+    /** @var int */
     private $executionTime;
+
+    /** @var \TYPO3\CMS\Core\Resource\StorageRepository */
     private $storageRepository;
 
     public function __construct(StorageRepository $storageRepository)
@@ -23,16 +26,17 @@ class PersistBynderFileStorage
      * @param  \TYPO3\CMS\Core\Package\Event\AfterPackageActivationEvent  $event
      * @return void
      */
-    public function __invoke(AfterPackageActivationEvent $event)
+    public function __invoke(AfterPackageActivationEvent $event): void
     {
         if ($event->getPackageKey() !== 'bynder') {
             return;
         }
 
-        /** @var $storageRepository StorageRepository */
         if ($this->storageRepository->findByStorageType(BynderDriver::KEY) !== []) {
             return;
         }
+
+        $this->createBynderStorage();
     }
 
     /**

@@ -8,10 +8,6 @@ use Bynder\Api\Impl\PermanentTokens\Configuration;
 
 class BynderClientFactory
 {
-    /**
-     * @return \Bynder\Api\BynderClient
-     * @throws \Exception
-     */
     public function __invoke(): BynderClient
     {
         return new BynderClient(new Configuration(

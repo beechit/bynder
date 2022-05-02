@@ -5,13 +5,14 @@ namespace BeechIt\Bynder\EventListener;
 use BeechIt\Bynder\Resource\BynderDriver;
 use BeechIt\Bynder\Service\BynderService;
 use GuzzleHttp\Exception\ClientException;
+use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ProcessBynderAsset
 {
-    /** @var \BeechIt\Bynder\Service\BynderService  */
+    /** @var \BeechIt\Bynder\Service\BynderService */
     private $bynderService;
 
     /**
@@ -26,7 +27,7 @@ class ProcessBynderAsset
      * @param  \TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent  $event
      * @return void
      */
-    public function __invoke(\TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent $event)
+    public function __invoke(\TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent $event): void
     {
         $file = $event->getFile();
         if ($file->getStorage()->getDriverType() !== BynderDriver::KEY) {
@@ -48,6 +49,8 @@ class ProcessBynderAsset
                     'mini' => '',
                 ],
             ];
+        } catch (NoSuchCacheException $e) {
+            return;
         }
 
         $processingConfiguration = $event->getConfiguration();
@@ -175,7 +178,7 @@ class ProcessBynderAsset
     /**
      * Calculate relative dimension
      *
-     * For instance you have the original width, height and new width.
+     * For instance; you have the original width, height and new width.
      * And want to calculate the new height with the same ratio as the original dimensions
      *
      * @param  int  $orgA

@@ -7,6 +7,7 @@ namespace BeechIt\Bynder\Backend;
  * Date: 21-2-18
  * All code (c) Beech.it all rights reserved
  */
+
 use BeechIt\Bynder\Resource\BynderDriver;
 
 /**
@@ -14,7 +15,7 @@ use BeechIt\Bynder\Resource\BynderDriver;
  */
 class ImageManipulationElement extends \TYPO3\CMS\Backend\Form\Element\ImageManipulationElement
 {
-    public function render()
+    public function render(): array
     {
         $resultArray = $this->initializeResultArray();
 
@@ -23,6 +24,7 @@ class ImageManipulationElement extends \TYPO3\CMS\Backend\Form\Element\ImageMani
             // Early return in case of Bynder file (or no file)
             return $resultArray;
         }
+
         return parent::render();
     }
 }

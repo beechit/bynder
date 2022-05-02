@@ -22,7 +22,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
      * @param  array  $inlineConfiguration
      * @return string
      */
-    protected function renderPossibleRecordsSelectorTypeGroupDB(array $inlineConfiguration)
+    protected function renderPossibleRecordsSelectorTypeGroupDB(array $inlineConfiguration): string
     {
         $selector = parent::renderPossibleRecordsSelectorTypeGroupDB($inlineConfiguration);
 
@@ -31,7 +31,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
         // Inject button before help-block
         if (strpos($selector, '</div><div class="help-block">') > 0) {
             $selector = str_replace('</div><div class="help-block">', $button . '</div><div class="help-block">', $selector);
-        // Try to inject it into the form-control container
+            // Try to inject it into the form-control container
         } elseif (preg_match('/<\/div><\/div>$/i', $selector)) {
             $selector = preg_replace('/<\/div><\/div>$/i', $button . '</div></div>', $selector);
         } else {

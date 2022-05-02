@@ -14,15 +14,18 @@ class PublicBynderUrl
         $resourceObject = $event->getResource();
         $relativeToCurrentScript = $event->isRelativeToCurrentScript();
 
+        /** @var \BeechIt\Bynder\Resource\BynderDriver $driver */
+        $driver = $event->getDriver();
+
         if ($resourceObject instanceof FileInterface && $resourceObject->getProperty('bynder') === true) {
             if ($resourceObject->getProperty('bynder_url')) {
                 $publicUrl = $resourceObject->getProperty('bynder_url');
             } else {
                 $publicUrl = ConfigurationUtility::getUnavailableImage($relativeToCurrentScript);
             }
-        } elseif ($event->getDriver() instanceof BynderDriver) {
+        } elseif ($driver instanceof BynderDriver) {
             try {
-                $publicUrl = $event->getDriver()->getPublicUrl($resourceObject->getIdentifier());
+                $publicUrl = $driver->getPublicUrl($resourceObject->getIdentifier());
             } catch (FileDoesNotExistException $e) {
                 $publicUrl = ConfigurationUtility::getUnavailableImage($relativeToCurrentScript);
             }
