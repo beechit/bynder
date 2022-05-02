@@ -16,8 +16,6 @@ use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Class DataHandlerHook
- *
  * Notify Bynder about use of files
  */
 class DataHandlerHook
@@ -29,7 +27,7 @@ class DataHandlerHook
      * @param string $table The DB table the operation was carried out on
      * @param mixed $recordId The record's uid for update records, a string to look the record's uid up after it has been created
      * @param array $updatedFields Array of changed fields and their new values
-     * @param DataHandler $dataHandler DataHandler parent object
+     * @param \TYPO3\CMS\Core\DataHandling\DataHandler $dataHandler DataHandler parent object
      */
     public function processDatamap_afterAllOperations(DataHandler $dataHandler)
     {
@@ -88,7 +86,7 @@ class DataHandlerHook
      * @param int $id the ID of the record
      * @param array $record The accordant database record
      * @param bool $recordWasDeleted can be set so that other hooks or
-     * @param DataHandler $dataHandler reference to the main DataHandler object
+     * @param \TYPO3\CMS\Core\DataHandling\DataHandler $dataHandler reference to the main DataHandler object
      */
     public function processCmdmap_deleteAction($table, $id, array $record, &$recordWasDeleted, DataHandler $dataHandler)
     {

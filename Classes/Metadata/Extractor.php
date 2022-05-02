@@ -12,9 +12,6 @@ use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Index\ExtractorInterface;
 
-/**
- * Class Extractor
- */
 class Extractor implements ExtractorInterface
 {
     /**
@@ -50,7 +47,7 @@ class Extractor implements ExtractorInterface
     }
 
     /**
-     * @param  Resource\File  $file
+     * @param \BeechIt\Bynder\Metadata\Resource\File $file
      * @return bool
      */
     public function canProcess(File $file)
@@ -61,7 +58,7 @@ class Extractor implements ExtractorInterface
     /**
      * Extract metadata of Bynder assets
      *
-     * @param  Resource\File  $file
+     * @param \BeechIt\Bynder\Metadata\Resource\File $file
      * @param  array  $previousExtractedData
      * @return array
      */

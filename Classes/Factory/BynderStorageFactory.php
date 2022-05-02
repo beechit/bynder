@@ -15,7 +15,7 @@ class BynderStorageFactory
             }
         }
 
-        throw new \InvalidArgumentException('Missing Bynder file storage');
+        throw new \InvalidArgumentException('Missing Bynder file storage', 1651481498);
     }
 
     protected function getBackendUserAuthentication(): BackendUserAuthentication

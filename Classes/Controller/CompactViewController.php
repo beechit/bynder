@@ -13,17 +13,24 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Index\Indexer;
 use TYPO3\CMS\Core\Resource\ResourceStorageInterface;
 use TYPO3Fluid\Fluid\View\ViewInterface;
 
 class CompactViewController
 {
-    /** @var \TYPO3Fluid\Fluid\View\ViewInterface */
-    protected $view;
+    /** @var \TYPO3\CMS\Core\Resource\ResourceStorageInterface */
+    private $bynderStorage;
 
     /** @var \BeechIt\Bynder\Service\BynderService */
     protected $bynderService;
+
+    /** @var \TYPO3\CMS\Core\Resource\Index\Indexer */
+    private $indexer;
+
+    /** @var \TYPO3Fluid\Fluid\View\ViewInterface */
+    protected $view;
 
     public function __construct(
         ResourceStorageInterface $bynderStorage,
@@ -57,7 +64,7 @@ class CompactViewController
         $error = '';
         foreach ($request->getParsedBody()['files'] ?? [] as $fileIdentifier) {
             $file = $this->bynderStorage->getFile($fileIdentifier);
-            if ($file) {
+            if ($file instanceof File) {
                 // (Re)Fetch metadata
                 $this->indexer->extractMetaData($file);
                 $files[] = $file->getUid();

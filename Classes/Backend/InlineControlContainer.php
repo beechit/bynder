@@ -11,22 +11,18 @@ namespace BeechIt\Bynder\Backend;
 use BeechIt\Bynder\Resource\BynderDriver;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Imaging\Icon;
-use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Class InlineControlContainer
- *
  * Override core InlineControlContainer to inject Bynder button
  */
 class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineControlContainer
 {
-
     /**
      * @param  array  $inlineConfiguration
      * @return string
      */
-    protected function renderPossibleRecordsSelectorTypeGroupDB(array $inlineConfiguration)
+    protected function renderPossibleRecordsSelectorTypeGroupDB(array $inlineConfiguration): string
     {
         $selector = parent::renderPossibleRecordsSelectorTypeGroupDB($inlineConfiguration);
 
@@ -35,7 +31,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
         // Inject button before help-block
         if (strpos($selector, '</div><div class="help-block">') > 0) {
             $selector = str_replace('</div><div class="help-block">', $button . '</div><div class="help-block">', $selector);
-        // Try to inject it into the form-control container
+            // Try to inject it into the form-control container
         } elseif (preg_match('/<\/div><\/div>$/i', $selector)) {
             $selector = preg_replace('/<\/div><\/div>$/i', $button . '</div></div>', $selector);
         } else {
@@ -101,7 +97,7 @@ class InlineControlContainer extends \TYPO3\CMS\Backend\Form\Container\InlineCon
      */
     protected function bynderStorageAvailable(): bool
     {
-        /** @var ResourceStorage $fileStorage */
+        /** @var \TYPO3\CMS\Core\Resource\ResourceStorage $fileStorage */
         foreach ($this->getBackendUserAuthentication()->getFileStorages() as $fileStorage) {
             if ($fileStorage->getDriverType() === BynderDriver::KEY) {
                 return true;

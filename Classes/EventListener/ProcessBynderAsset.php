@@ -1,79 +1,45 @@
 <?php
 
-namespace BeechIt\Bynder\Resource;
+namespace BeechIt\Bynder\EventListener;
 
-/*
- * This source file is proprietary property of Beech.it
- * Date: 21-2-18
- * All code (c) Beech.it all rights reserved
- */
+use BeechIt\Bynder\Resource\BynderDriver;
 use BeechIt\Bynder\Service\BynderService;
 use GuzzleHttp\Exception\ClientException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
-use TYPO3\CMS\Core\Resource\Driver\DriverInterface;
-use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
-use TYPO3\CMS\Core\Resource\Service\FileProcessingService;
-use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
-/**
- * Class AssetProcessing
- *
- * Create/fetch CDN urls for scaled/cropped Bynder assets
- *
- * @package BeechIt\Bynder\Resource
- */
-class AssetProcessing implements SingletonInterface
+class ProcessBynderAsset
 {
-    /**
-     * Timestamp in microseconds
-     *
-     * @var float
-     */
-    protected static $lastRequestedOtfAsset;
+    /** @var \BeechIt\Bynder\Service\BynderService */
+    private $bynderService;
 
     /**
-     * @var BynderService
+     * @param  \BeechIt\Bynder\Service\BynderService  $bynderService
      */
-    protected $bynderService;
-
-    /**
-     * @param ProcessedFile $processedFile
-     * @return bool
-     */
-    protected function needsReprocessing($processedFile): bool
+    public function __construct(BynderService $bynderService)
     {
-        return $processedFile->isNew()
-            || (!$processedFile->usesOriginalFile() && !$processedFile->exists())
-            || $processedFile->isOutdated();
+        $this->bynderService = $bynderService;
     }
 
     /**
-     * Create url for scalled/cropped versions of Bynder assets
-     *
-     * @param FileProcessingService $fileProcessingService
-     * @param DriverInterface $driver
-     * @param ProcessedFile $processedFile
-     * @param File $file
-     * @param $taskType
-     * @param array $configuration
-     * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
+     * @param  \TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent  $event
+     * @return void
      */
-    public function processFile(FileProcessingService $fileProcessingService, DriverInterface $driver, ProcessedFile $processedFile, File $file, $taskType, array $configuration)
+    public function __invoke(\TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent $event): void
     {
+        $file = $event->getFile();
         if ($file->getStorage()->getDriverType() !== BynderDriver::KEY) {
             return;
         }
 
+        $processedFile = $event->getProcessedFile();
         if (!$this->needsReprocessing($processedFile)) {
             return;
         }
-
         try {
-            $mediaInfo = $this->getBynderService()->getMediaInfo($processedFile->getOriginalFile()->getIdentifier());
+            $mediaInfo = $this->bynderService->getMediaInfo($file->getIdentifier());
         } catch (ClientException $e) {
             $mediaInfo = [
                 'isPublic' => false,
@@ -81,13 +47,15 @@ class AssetProcessing implements SingletonInterface
                     'thul' => '',
                     'webimage' => '',
                     'mini' => '',
-                ]
+                ],
             ];
+        } catch (NoSuchCacheException $e) {
+            return;
         }
 
-        $processingConfiguration = $processedFile->getProcessingConfiguration();
+        $processingConfiguration = $event->getConfiguration();
         // The CONTEXT_IMAGEPREVIEW task only gives max dimensions
-        if ($taskType === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
+        if ($event->getTaskType() === ProcessedFile::CONTEXT_IMAGEPREVIEW) {
             if (!empty($processingConfiguration['width'])) {
                 $processingConfiguration['width'] .= 'm';
             }
@@ -98,56 +66,57 @@ class AssetProcessing implements SingletonInterface
 
         $fileInfo = $this->getThumbnailInfo(
             $processingConfiguration,
-            (int)$processedFile->getOriginalFile()->getProperty('width'),
-            (int)$processedFile->getOriginalFile()->getProperty('height'),
-            $mediaInfo['isPublic'] ? $this->getBynderService()->getOTFBaseUrl() . $processedFile->getOriginalFile()->getIdentifier() : '',
+            (int)$file->getProperty('width'),
+            (int)$file->getProperty('height'),
             $mediaInfo['thumbnails']
         );
-
-        // Fetch OTF url to trigger generation of the derivative
-        if ($fileInfo['type'] === 'otf') {
-            GeneralUtility::getUrl($fileInfo['url']);
-            self::$lastRequestedOtfAsset = microtime(true);
-        }
 
         $processedFile->setUsesOriginalFile();
         $checksum = $processedFile->getTask()->getConfigurationChecksum();
         $processedFile->setIdentifier('processed_' . $file->getIdentifier() . '_' . $fileInfo['type'] . '_' . $checksum);
 
         // Update existing processed file
-        $processedFile->updateProperties(
-            [
-                'bynder' => true,
-                'width' => $fileInfo['width'],
-                'height' => $fileInfo['height'],
-                'checksum' => $checksum,
-                'bynder_url' => $fileInfo['url'],
-            ]
-        );
+        $processedFile->updateProperties([
+            'bynder' => true,
+            'width' => $fileInfo['width'],
+            'height' => $fileInfo['height'],
+            'checksum' => $checksum,
+            'bynder_url' => $fileInfo['url'],
+        ]);
 
         // Persist processed file like done in FileProcessingService::process()
         $processedFileRepository = GeneralUtility::makeInstance(ProcessedFileRepository::class);
         $processedFileRepository->add($processedFile);
+
+        $event->setProcessedFile($processedFile);
+    }
+
+    /**
+     * @param  \TYPO3\CMS\Core\Resource\ProcessedFile  $processedFile
+     * @return bool
+     */
+    protected function needsReprocessing(ProcessedFile $processedFile): bool
+    {
+        return $processedFile->isNew()
+            || (!$processedFile->usesOriginalFile() && !$processedFile->exists())
+            || $processedFile->isOutdated();
     }
 
     /**
      * Calculate the best suitable/available dimensions for the requested file configuration
      *
-     * @param array $configuration
-     * @param int $orgWidth
-     * @param int $orgHeight
-     * @param string $otfBaseUrl
-     * @param array $derivatives
+     * @param  array  $configuration
+     * @param  int  $orgWidth
+     * @param  int  $orgHeight
+     * @param  array  $derivatives
      * @return array
      */
-    protected function getThumbnailInfo(array $configuration, int $orgWidth, int $orgHeight, string $otfBaseUrl, array $derivatives): array
+    protected function getThumbnailInfo(array $configuration, int $orgWidth, int $orgHeight, array $derivatives): array
     {
         $rawWidth = $configuration['width'] ?? $configuration['maxWidth'] ?? 0;
         $rawHeight = $configuration['height'] ?? $configuration['maxHeight'] ?? 0;
 
         $keepRatio = true;
-        $crop = false;
-        $otf = $otfBaseUrl !== '';
 
         // When width and height are set and non of them have a 'm' suffix we don't keep existing ratio
         if ($rawWidth && $rawHeight && strpos($rawWidth . $rawWidth, 'm') < 0) {
@@ -157,7 +126,6 @@ class AssetProcessing implements SingletonInterface
         // When width and height are set and one of then have a 'c' suffix we don't keep existing ratio and allow cropping
         if ($rawWidth && $rawHeight && strpos($rawWidth . $rawWidth, 'c') >= 0) {
             $keepRatio = false;
-            $crop = true;
         }
 
         $width = (int)$rawWidth;
@@ -177,19 +145,6 @@ class AssetProcessing implements SingletonInterface
             $height = $this->calculateRelativeDimension($orgWidth, $orgHeight, $width);
         } elseif ($width === 0 && $height > 0) {
             $width = $this->calculateRelativeDimension($orgHeight, $orgWidth, $height);
-        }
-
-        if ($otf) {
-            return [
-                'type' => 'otf',
-                'width' => $width ?: $orgWidth,
-                'height' => $height ?: $orgHeight,
-                'url' => $otfBaseUrl . '?' . http_build_query([
-                        'w' => $width ?: '',
-                        'h' => $height ?: '',
-                        'crop' => $crop ? 'true' : 'false'
-                    ]),
-            ];
         }
 
         $default = [
@@ -223,12 +178,12 @@ class AssetProcessing implements SingletonInterface
     /**
      * Calculate relative dimension
      *
-     * For instance you have the original width, height and new width.
+     * For instance; you have the original width, height and new width.
      * And want to calculate the new height with the same ratio as the original dimensions
      *
-     * @param int $orgA
-     * @param int $orgB
-     * @param int $newA
+     * @param  int  $orgA
+     * @param  int  $orgB
+     * @param  int  $newA
      * @return int
      */
     protected function calculateRelativeDimension(int $orgA, int $orgB, int $newA): int
@@ -238,32 +193,5 @@ class AssetProcessing implements SingletonInterface
         }
 
         return (int)($orgB / ($orgA / $newA));
-    }
-
-    /**
-     * @return BynderService
-     * @throws \InvalidArgumentException
-     */
-    protected function getBynderService(): BynderService
-    {
-        if ($this->bynderService === null) {
-            $this->bynderService = GeneralUtility::makeInstance(BynderService::class);
-        }
-
-        return $this->bynderService;
-    }
-
-    /**
-     * Bynder needs some time to process the OTF images
-     */
-    public function __destruct()
-    {
-        if (!self::$lastRequestedOtfAsset) {
-            return;
-        }
-        $difference = microtime(true) - (float)self::$lastRequestedOtfAsset;
-        if ($difference < 3) {
-            sleep(ceil(3 - $difference));
-        }
     }
 }
